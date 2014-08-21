@@ -123,6 +123,11 @@ static u_char title[] =
 "<meta charset=\"utf-8\">" CRLF
 "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" CRLF
 "<link rel=\"stylesheet\" href=\"//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css\">" CRLF
+"<style>" CRLF
+"body {" CRLF
+"    word-wrap: break-word;" CRLF
+"}"
+"</style>" CRLF
 "<title>Index of "
 ;
 
