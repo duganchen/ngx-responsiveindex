@@ -400,10 +400,12 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
           + sizeof(header) - 1
           + r->uri.len + escape_html
           + sizeof("</h1>") - 1
-          + sizeof("<a href=\"../\">../</a>" CRLF) - 1
           + sizeof(tail) - 1
 		  + sizeof(table_header) - 1
 		  + sizeof(table_footer) - 1;
+
+
+    len += sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1;
 
     entry = entries.elts;
     for (i = 0; i < entries.nelts; i++) {
@@ -428,6 +430,8 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
     }
 
 	len += sizeof("<ul class=\"list-group\">" CRLF) - 1;
+	len += sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1;
+
 	for (i = 0; i < entries.nelts; i++) {
 		len += sizeof("<li class=\"list-group-item\"><a href=\"") - 1
 			+ entry[i].name.len + entry[i].escape
@@ -466,12 +470,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
 
-    b->last = ngx_cpymem(b->last, "<a href=\"../\">../</a>" CRLF,
-                         sizeof("<a href=\"../\">../</a>" CRLF) - 1);
-
     b->last = ngx_cpymem(b->last, table_header, sizeof(table_header) - 1);
 
     tp = ngx_timeofday();
+
+	b->last = ngx_cpymem(b->last, "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF, sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1);
 
     for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, "<tr>", sizeof("<tr>") - 1);
@@ -637,6 +640,8 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 	/* The table is draw. Now draw the list. */
 
 	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs visible-sm\">" CRLF, sizeof("<ul class=\"list-group visible-xs visible-sm\">" CRLF) - 1);
+
+	b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF, sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1);
 
 	for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"", sizeof("<li class=\"list-group-item\"><a href=\"") - 1);
