@@ -117,14 +117,18 @@ ngx_module_t  ngx_http_responsiveindex_module = {
 
 
 static u_char title[] =
-"<html>" CRLF
-"<head><title>Index of "
+"<!DOCTYPE html>" CRLF
+"<html lang=\"en\">" CRLF
+"<head>" CRLF
+"<meta charset=\"utf-8\">" CRLF
+"<title>Index of "
 ;
 
 
 static u_char header[] =
-"</title></head>" CRLF
-"<body bgcolor=\"white\">" CRLF
+"</title>" CRLF
+"</head>" CRLF
+"<body>" CRLF
 "<h1>Index of "
 ;
 
@@ -368,8 +372,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
           + sizeof(header) - 1
           + r->uri.len + escape_html
           + sizeof("</h1>") - 1
-          + sizeof("<hr><pre><a href=\"../\">../</a>" CRLF) - 1
-          + sizeof("</pre><hr>") - 1
+          + sizeof("<a href=\"../\">../</a>" CRLF) - 1
           + sizeof(tail) - 1;
 
     entry = entries.elts;
@@ -413,8 +416,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
     b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
 
-    b->last = ngx_cpymem(b->last, "<hr><pre><a href=\"../\">../</a>" CRLF,
-                         sizeof("<hr><pre><a href=\"../\">../</a>" CRLF) - 1);
+    b->last = ngx_cpymem(b->last, "<a href=\"../\">../</a>" CRLF,
+                         sizeof("<a href=\"../\">../</a>" CRLF) - 1);
 
     tp = ngx_timeofday();
 
@@ -566,8 +569,6 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
     }
 
     /* TODO: free temporary pool */
-
-    b->last = ngx_cpymem(b->last, "</pre><hr>", sizeof("</pre><hr>") - 1);
 
     b->last = ngx_cpymem(b->last, tail, sizeof(tail) - 1);
 
