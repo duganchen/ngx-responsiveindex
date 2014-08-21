@@ -418,6 +418,19 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             + 2;
     }
 
+	len += sizeof("<ul>" CRLF) - 1;
+	for (i = 0; i < entries.nelts; i++) {
+		len += sizeof("<li><a href=\"") - 1
+			+ entry[i].name.len + entry[i].escape
+			+ 1                                          /* 1 is for "/" */
+			+ sizeof("\"/>") - 1
+		    + entry[i].name.len - entry[i].utf_len
+            + entry[i].escape_html
+            + NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
+			+ sizeof("</a><li>") - 1;
+	}
+	len += sizeof("</ul>" CRLF) - 1;
+
     b = ngx_create_temp_buf(r->pool, len);
     if (b == NULL) {
         return NGX_ERROR;
@@ -611,6 +624,98 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
     }
 
     b->last = ngx_cpymem(b->last, table_footer, sizeof(table_footer) - 1);
+
+	/* The table is draw. Now draw the list. */
+
+	b->last = ngx_cpymem(b->last, "<ul>" CRLF, sizeof("<ul>" CRLF) - 1);
+
+	for (i = 0; i < entries.nelts; i++) {
+		b->last = ngx_cpymem(b->last, "<li><a href=\"", sizeof("<li><a href=\"") - 1);
+
+		/* This copy and paste from the loop above could probably be cleaned up */
+
+        if (entry[i].escape) {
+            ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
+                           NGX_ESCAPE_URI_COMPONENT);
+
+            b->last += entry[i].name.len + entry[i].escape;
+
+        } else {
+            b->last = ngx_cpymem(b->last, entry[i].name.data,
+                                 entry[i].name.len);
+        }
+
+        if (entry[i].dir) {
+            *b->last++ = '/';
+        }
+
+        *b->last++ = '"';
+        *b->last++ = '>';
+
+        len = entry[i].utf_len;
+
+        if (entry[i].name.len != len) {
+            if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
+
+            } else {
+                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
+            }
+
+            last = b->last;
+            b->last = ngx_utf8_cpystrn(b->last, entry[i].name.data,
+                                       char_len, entry[i].name.len + 1);
+
+            if (entry[i].escape_html) {
+                b->last = (u_char *) ngx_escape_html(last, entry[i].name.data,
+                                                     b->last - last);
+            }
+
+            last = b->last;
+
+        } else {
+            if (entry[i].escape_html) {
+                if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+                    char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
+
+                } else {
+                    char_len = len;
+                }
+
+                b->last = (u_char *) ngx_escape_html(b->last,
+                                                  entry[i].name.data, char_len);
+                last = b->last;
+
+            } else {
+                b->last = ngx_cpystrn(b->last, entry[i].name.data,
+                                      NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
+                last = b->last - 3;
+            }
+        }
+
+        if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+            b->last = ngx_cpymem(last, "..&gt;</a>", sizeof("..&gt;</a>") - 1);
+
+        } else {
+            if (entry[i].dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
+                *b->last++ = '/';
+                len++;
+            }
+
+            b->last = ngx_cpymem(b->last, "</a>", sizeof("</a>") - 1);
+
+            if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
+                ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
+                b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
+            }
+        }
+
+		b->last = ngx_cpymem(b->last, "</li>" CRLF, sizeof("</li" CRLF) - 1);
+
+	}
+
+	b->last = ngx_cpymem(b->last, "</ul>" CRLF, sizeof("</ul>" CRLF) - 1);
+
 
     /* TODO: free temporary pool */
 
