@@ -146,8 +146,8 @@ static u_char tail[] =
 
 
 static u_char table_header[] =
-"<div class=\"table-responsive\">" CRLF
-"<table class=\"table table-striped table-condensed hidden-xs\">" CRLF
+"<div class=\"table-responsive hidden-xs hidden-sm\">" CRLF
+"<table class=\"table table-striped table-condensed\">" CRLF
 "<thead>" CRLF
 "<tr>" CRLF
 "<th>File Name</th>" CRLF
@@ -636,7 +636,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 	/* The table is draw. Now draw the list. */
 
-	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs\">" CRLF, sizeof("<ul class=\"list-group visible-xs\">" CRLF) - 1);
+	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs visible-sm\">" CRLF, sizeof("<ul class=\"list-group visible-xs visible-sm\">" CRLF) - 1);
 
 	for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"", sizeof("<li class=\"list-group-item\"><a href=\"") - 1);
