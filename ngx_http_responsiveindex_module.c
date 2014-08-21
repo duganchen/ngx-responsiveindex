@@ -398,7 +398,9 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
     entry = entries.elts;
     for (i = 0; i < entries.nelts; i++) {
-        len += sizeof("<a href=\"") - 1
+        len += sizeof("<tr>") - 1
+			+ sizeof("<td>") - 1
+			+ sizeof("<a href=\"") - 1
             + entry[i].name.len + entry[i].escape
             + 1                                          /* 1 is for "/" */
             + sizeof("\">") - 1
@@ -406,8 +408,13 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
             + entry[i].escape_html
             + NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
             + sizeof("</a>") - 1
-            + sizeof(" 28-Sep-1970 12:00 ") - 1
+			+ sizeof("</td>") - 1
+			+ sizeof("<td>") - 1
+            + sizeof("28-Sep-1970 12:00") - 1
+			+ sizeof("</td>") - 1
+			+ sizeof("<td>") - 1
             + 20                                         /* the file size */
+			+ sizeof("</td>") - 1
             + 2;
     }
 
@@ -445,6 +452,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
     tp = ngx_timeofday();
 
     for (i = 0; i < entries.nelts; i++) {
+		b->last = ngx_cpymem(b->last, "<tr>", sizeof("<tr>") - 1);
+		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
         b->last = ngx_cpymem(b->last, "<a href=\"", sizeof("<a href=\"") - 1);
 
         if (entry[i].escape) {
@@ -523,9 +532,12 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
             }
         }
 
-        *b->last++ = ' ';
+		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
 
         ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * alcf->localtime, &tm);
+
+
+		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
 
         b->last = ngx_sprintf(b->last, "%02d-%s-%d %02d:%02d ",
                               tm.ngx_tm_mday,
@@ -534,18 +546,21 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
                               tm.ngx_tm_hour,
                               tm.ngx_tm_min);
 
+		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
+		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
+
         if (alcf->exact_size) {
             if (entry[i].dir) {
-                b->last = ngx_cpymem(b->last,  "                  -",
-                                     sizeof("                  -") - 1);
+                b->last = ngx_cpymem(b->last,  "-",
+                                     sizeof("-") - 1);
             } else {
                 b->last = ngx_sprintf(b->last, "%19O", entry[i].size);
             }
 
         } else {
             if (entry[i].dir) {
-                b->last = ngx_cpymem(b->last,  "      -",
-                                     sizeof("      -") - 1);
+                b->last = ngx_cpymem(b->last,  "-",
+                                     sizeof("-") - 1);
 
             } else {
                 length = entry[i].size;
@@ -582,10 +597,14 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
                     b->last = ngx_sprintf(b->last, "%6i%c", size, scale);
 
                 } else {
-                    b->last = ngx_sprintf(b->last, " %6i", size);
+                    b->last = ngx_sprintf(b->last, "%6i", size);
                 }
             }
         }
+
+
+		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
+		b->last = ngx_cpymem(b->last, "</tr>", sizeof("</tr>") - 1);
 
         *b->last++ = CR;
         *b->last++ = LF;
