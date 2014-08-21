@@ -127,6 +127,11 @@ static u_char title[] =
 "body {" CRLF
 "    word-wrap: break-word;" CRLF
 "}" CRLF
+"a {" CRLF
+"    display: block;" CRLF
+"    width: 100%;" CRLF
+"    height: 100%;" CRLF
+"}" CRLF
 "</style>" CRLF
 "<title>Index of "
 ;
