@@ -139,7 +139,7 @@ static u_char tail[] =
 
 
 static u_char table_header[] =
-"<table>" CRLF
+"<table class=\"table table-striped table-condensed hidden-xs\">" CRLF
 "<thead>" CRLF
 "<tr>" CRLF
 "<th>File Name</th>" CRLF
