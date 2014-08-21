@@ -138,6 +138,25 @@ static u_char tail[] =
 ;
 
 
+static u_char table_header[] =
+"<table>" CRLF
+"<thead>" CRLF
+"<tr>" CRLF
+"<th>File Name</th>" CRLF
+"<th>Date</th>" CRLF
+"<th>File Size</th>" CRLF
+"</tr>" CRLF
+"</thead>" CRLF
+"<tbody>" CRLF
+;
+
+
+static u_char table_footer[] =
+"</tbody>" CRLF
+"</table>" CRLF
+;
+
+
 static ngx_int_t
 ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 {
@@ -373,7 +392,9 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
           + r->uri.len + escape_html
           + sizeof("</h1>") - 1
           + sizeof("<a href=\"../\">../</a>" CRLF) - 1
-          + sizeof(tail) - 1;
+          + sizeof(tail) - 1
+		  + sizeof(table_header) - 1
+		  + sizeof(table_footer) - 1;
 
     entry = entries.elts;
     for (i = 0; i < entries.nelts; i++) {
@@ -418,6 +439,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
     b->last = ngx_cpymem(b->last, "<a href=\"../\">../</a>" CRLF,
                          sizeof("<a href=\"../\">../</a>" CRLF) - 1);
+
+    b->last = ngx_cpymem(b->last, table_header, sizeof(table_header) - 1);
 
     tp = ngx_timeofday();
 
@@ -567,6 +590,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
         *b->last++ = CR;
         *b->last++ = LF;
     }
+
+    b->last = ngx_cpymem(b->last, table_footer, sizeof(table_footer) - 1);
 
     /* TODO: free temporary pool */
 
