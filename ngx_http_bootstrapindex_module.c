@@ -121,6 +121,7 @@ static u_char title[] =
 "<html lang=\"en\">" CRLF
 "<head>" CRLF
 "<meta charset=\"utf-8\">" CRLF
+"<link rel=\"stylesheet\" href=\"//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css\">" CRLF
 "<title>Index of "
 ;
 
@@ -129,16 +130,23 @@ static u_char header[] =
 "</title>" CRLF
 "</head>" CRLF
 "<body>" CRLF
+"<div class=\"container-fluid\">" CRLF
+"<div class=\"row\">" CRLF
+"<div class=\"col-md-12\">" CRLF
 "<h1>Index of "
 ;
 
 static u_char tail[] =
+"</div>" CRLF
+"</div>" CRLF
+"</div>" CRLF
 "</body>" CRLF
 "</html>" CRLF
 ;
 
 
 static u_char table_header[] =
+"<div class=\"table-responsive\">" CRLF
 "<table class=\"table table-striped table-condensed hidden-xs\">" CRLF
 "<thead>" CRLF
 "<tr>" CRLF
@@ -154,6 +162,7 @@ static u_char table_header[] =
 static u_char table_footer[] =
 "</tbody>" CRLF
 "</table>" CRLF
+"</div>" CRLF
 ;
 
 
