@@ -43,9 +43,9 @@ typedef struct {
 } ngx_http_responsiveindex_loc_conf_t;
 
 
-#define NGX_HTTP_AUTOINDEX_PREALLOCATE  50
+#define NGX_HTTP_AUTOINDEX_PREALLOCATE  255
 
-#define NGX_HTTP_AUTOINDEX_NAME_LEN     50
+#define NGX_HTTP_AUTOINDEX_NAME_LEN     255
 
 
 static int ngx_libc_cdecl ngx_http_responsiveindex_cmp_entries(const void *one,
