@@ -418,9 +418,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             + 2;
     }
 
-	len += sizeof("<ul>" CRLF) - 1;
+	len += sizeof("<ul class=\"list-group\">" CRLF) - 1;
 	for (i = 0; i < entries.nelts; i++) {
-		len += sizeof("<li><a href=\"") - 1
+		len += sizeof("<li class=\"list-group-item\"><a href=\"") - 1
 			+ entry[i].name.len + entry[i].escape
 			+ 1                                          /* 1 is for "/" */
 			+ sizeof("\"/>") - 1
@@ -627,10 +627,10 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 	/* The table is draw. Now draw the list. */
 
-	b->last = ngx_cpymem(b->last, "<ul>" CRLF, sizeof("<ul>" CRLF) - 1);
+	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs\">" CRLF, sizeof("<ul class=\"list-group visible-xs\">" CRLF) - 1);
 
 	for (i = 0; i < entries.nelts; i++) {
-		b->last = ngx_cpymem(b->last, "<li><a href=\"", sizeof("<li><a href=\"") - 1);
+		b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"", sizeof("<li class=\"list-group-item\"><a href=\"") - 1);
 
 		/* This copy and paste from the loop above could probably be cleaned up */
 
@@ -710,7 +710,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             }
         }
 
-		b->last = ngx_cpymem(b->last, "</li>" CRLF, sizeof("</li" CRLF) - 1);
+		b->last = ngx_cpymem(b->last, "</li>" CRLF, sizeof("</li>" CRLF) - 1);
 
 	}
 
