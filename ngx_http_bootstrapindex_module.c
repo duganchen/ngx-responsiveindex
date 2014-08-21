@@ -18,7 +18,7 @@ typedef struct {
     ngx_pool_t    *pool;
     size_t         alloc_size;
     ngx_chain_t  **last_out;
-} ngx_http_responsiveindex_ctx_t;
+} ngx_http_bootstrapindex_ctx_t;
 
 #endif
 
@@ -33,14 +33,14 @@ typedef struct {
 
     time_t         mtime;
     off_t          size;
-} ngx_http_responsiveindex_entry_t;
+} ngx_http_bootstrapindex_entry_t;
 
 
 typedef struct {
     ngx_flag_t     enable;
     ngx_flag_t     localtime;
     ngx_flag_t     exact_size;
-} ngx_http_responsiveindex_loc_conf_t;
+} ngx_http_bootstrapindex_loc_conf_t;
 
 
 #define NGX_HTTP_AUTOINDEX_PREALLOCATE  255
@@ -48,46 +48,46 @@ typedef struct {
 #define NGX_HTTP_AUTOINDEX_NAME_LEN     255
 
 
-static int ngx_libc_cdecl ngx_http_responsiveindex_cmp_entries(const void *one,
+static int ngx_libc_cdecl ngx_http_bootstrapindex_cmp_entries(const void *one,
     const void *two);
-static ngx_int_t ngx_http_responsiveindex_error(ngx_http_request_t *r,
+static ngx_int_t ngx_http_bootstrapindex_error(ngx_http_request_t *r,
     ngx_dir_t *dir, ngx_str_t *name);
-static ngx_int_t ngx_http_responsiveindex_init(ngx_conf_t *cf);
-static void *ngx_http_responsiveindex_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_responsiveindex_merge_loc_conf(ngx_conf_t *cf,
+static ngx_int_t ngx_http_bootstrapindex_init(ngx_conf_t *cf);
+static void *ngx_http_bootstrapindex_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_bootstrapindex_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
 
-static ngx_command_t  ngx_http_responsiveindex_commands[] = {
+static ngx_command_t  ngx_http_bootstrapindex_commands[] = {
 
-    { ngx_string("responsiveindex"),
+    { ngx_string("bootstrapindex"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_responsiveindex_loc_conf_t, enable),
+      offsetof(ngx_http_bootstrapindex_loc_conf_t, enable),
       NULL },
 
-    { ngx_string("responsiveindex_localtime"),
+    { ngx_string("bootstrapindex_localtime"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_responsiveindex_loc_conf_t, localtime),
+      offsetof(ngx_http_bootstrapindex_loc_conf_t, localtime),
       NULL },
 
-    { ngx_string("responsiveindex_exact_size"),
+    { ngx_string("bootstrapindex_exact_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_responsiveindex_loc_conf_t, exact_size),
+      offsetof(ngx_http_bootstrapindex_loc_conf_t, exact_size),
       NULL },
 
       ngx_null_command
 };
 
 
-static ngx_http_module_t  ngx_http_responsiveindex_module_ctx = {
+static ngx_http_module_t  ngx_http_bootstrapindex_module_ctx = {
     NULL,                                  /* preconfiguration */
-    ngx_http_responsiveindex_init,               /* postconfiguration */
+    ngx_http_bootstrapindex_init,               /* postconfiguration */
 
     NULL,                                  /* create main configuration */
     NULL,                                  /* init main configuration */
@@ -95,15 +95,15 @@ static ngx_http_module_t  ngx_http_responsiveindex_module_ctx = {
     NULL,                                  /* create server configuration */
     NULL,                                  /* merge server configuration */
 
-    ngx_http_responsiveindex_create_loc_conf,    /* create location configuration */
-    ngx_http_responsiveindex_merge_loc_conf      /* merge location configuration */
+    ngx_http_bootstrapindex_create_loc_conf,    /* create location configuration */
+    ngx_http_bootstrapindex_merge_loc_conf      /* merge location configuration */
 };
 
 
-ngx_module_t  ngx_http_responsiveindex_module = {
+ngx_module_t  ngx_http_bootstrapindex_module = {
     NGX_MODULE_V1,
-    &ngx_http_responsiveindex_module_ctx,        /* module context */
-    ngx_http_responsiveindex_commands,           /* module directives */
+    &ngx_http_bootstrapindex_module_ctx,        /* module context */
+    ngx_http_bootstrapindex_commands,           /* module directives */
     NGX_HTTP_MODULE,                       /* module type */
     NULL,                                  /* init master */
     NULL,                                  /* init module */
@@ -158,7 +158,7 @@ static u_char table_footer[] =
 
 
 static ngx_int_t
-ngx_http_responsiveindex_handler(ngx_http_request_t *r)
+ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 {
     u_char                         *last, *filename, scale;
     off_t                           length;
@@ -174,8 +174,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
     ngx_time_t                     *tp;
     ngx_chain_t                     out;
     ngx_array_t                     entries;
-    ngx_http_responsiveindex_entry_t     *entry;
-    ngx_http_responsiveindex_loc_conf_t  *alcf;
+    ngx_http_bootstrapindex_entry_t     *entry;
+    ngx_http_bootstrapindex_loc_conf_t  *alcf;
 
     static char  *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
@@ -188,7 +188,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
         return NGX_DECLINED;
     }
 
-    alcf = ngx_http_get_module_loc_conf(r, ngx_http_responsiveindex_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_bootstrapindex_module);
 
     if (!alcf->enable) {
         return NGX_DECLINED;
@@ -210,7 +210,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
     path.data[path.len] = '\0';
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http responsiveindex: \"%s\"", path.data);
+                   "http bootstrapindex: \"%s\"", path.data);
 
     if (ngx_open_dir(&path, &dir) == NGX_ERROR) {
         err = ngx_errno;
@@ -247,10 +247,10 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
     /* TODO: pool should be temporary pool */
     pool = r->pool;
 
-    if (ngx_array_init(&entries, pool, 40, sizeof(ngx_http_responsiveindex_entry_t))
+    if (ngx_array_init(&entries, pool, 40, sizeof(ngx_http_bootstrapindex_entry_t))
         != NGX_OK)
     {
-        return ngx_http_responsiveindex_error(r, &dir, &path);
+        return ngx_http_bootstrapindex_error(r, &dir, &path);
     }
 
     r->headers_out.status = NGX_HTTP_OK;
@@ -291,14 +291,14 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
             if (err != NGX_ENOMOREFILES) {
                 ngx_log_error(NGX_LOG_CRIT, r->connection->log, err,
                               ngx_read_dir_n " \"%V\" failed", &path);
-                return ngx_http_responsiveindex_error(r, &dir, &path);
+                return ngx_http_bootstrapindex_error(r, &dir, &path);
             }
 
             break;
         }
 
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http responsiveindex file: \"%s\"", ngx_de_name(&dir));
+                       "http bootstrapindex file: \"%s\"", ngx_de_name(&dir));
 
         len = ngx_de_namelen(&dir);
 
@@ -316,7 +316,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
                 filename = ngx_pnalloc(pool, allocated);
                 if (filename == NULL) {
-                    return ngx_http_responsiveindex_error(r, &dir, &path);
+                    return ngx_http_bootstrapindex_error(r, &dir, &path);
                 }
 
                 last = ngx_cpystrn(filename, path.data, path.len + 1);
@@ -336,28 +336,28 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
                         continue;
                     }
 
-                    return ngx_http_responsiveindex_error(r, &dir, &path);
+                    return ngx_http_bootstrapindex_error(r, &dir, &path);
                 }
 
                 if (ngx_de_link_info(filename, &dir) == NGX_FILE_ERROR) {
                     ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno,
                                   ngx_de_link_info_n " \"%s\" failed",
                                   filename);
-                    return ngx_http_responsiveindex_error(r, &dir, &path);
+                    return ngx_http_bootstrapindex_error(r, &dir, &path);
                 }
             }
         }
 
         entry = ngx_array_push(&entries);
         if (entry == NULL) {
-            return ngx_http_responsiveindex_error(r, &dir, &path);
+            return ngx_http_bootstrapindex_error(r, &dir, &path);
         }
 
         entry->name.len = len;
 
         entry->name.data = ngx_pnalloc(pool, len + 1);
         if (entry->name.data == NULL) {
-            return ngx_http_responsiveindex_error(r, &dir, &path);
+            return ngx_http_bootstrapindex_error(r, &dir, &path);
         }
 
         ngx_cpystrn(entry->name.data, ngx_de_name(&dir), len + 1);
@@ -425,8 +425,8 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
     if (entries.nelts > 1) {
         ngx_qsort(entry, (size_t) entries.nelts,
-                  sizeof(ngx_http_responsiveindex_entry_t),
-                  ngx_http_responsiveindex_cmp_entries);
+                  sizeof(ngx_http_bootstrapindex_entry_t),
+                  ngx_http_bootstrapindex_cmp_entries);
     }
 
     b->last = ngx_cpymem(b->last, title, sizeof(title) - 1);
@@ -630,10 +630,10 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 
 static int ngx_libc_cdecl
-ngx_http_responsiveindex_cmp_entries(const void *one, const void *two)
+ngx_http_bootstrapindex_cmp_entries(const void *one, const void *two)
 {
-    ngx_http_responsiveindex_entry_t *first = (ngx_http_responsiveindex_entry_t *) one;
-    ngx_http_responsiveindex_entry_t *second = (ngx_http_responsiveindex_entry_t *) two;
+    ngx_http_bootstrapindex_entry_t *first = (ngx_http_bootstrapindex_entry_t *) one;
+    ngx_http_bootstrapindex_entry_t *second = (ngx_http_bootstrapindex_entry_t *) two;
 
     if (first->dir && !second->dir) {
         /* move the directories to the start */
@@ -652,7 +652,7 @@ ngx_http_responsiveindex_cmp_entries(const void *one, const void *two)
 #if 0
 
 static ngx_buf_t *
-ngx_http_responsiveindex_alloc(ngx_http_responsiveindex_ctx_t *ctx, size_t size)
+ngx_http_bootstrapindex_alloc(ngx_http_bootstrapindex_ctx_t *ctx, size_t size)
 {
     ngx_chain_t  *cl;
 
@@ -688,7 +688,7 @@ ngx_http_responsiveindex_alloc(ngx_http_responsiveindex_ctx_t *ctx, size_t size)
 
 
 static ngx_int_t
-ngx_http_responsiveindex_error(ngx_http_request_t *r, ngx_dir_t *dir, ngx_str_t *name)
+ngx_http_bootstrapindex_error(ngx_http_request_t *r, ngx_dir_t *dir, ngx_str_t *name)
 {
     if (ngx_close_dir(dir) == NGX_ERROR) {
         ngx_log_error(NGX_LOG_ALERT, r->connection->log, ngx_errno,
@@ -700,11 +700,11 @@ ngx_http_responsiveindex_error(ngx_http_request_t *r, ngx_dir_t *dir, ngx_str_t 
 
 
 static void *
-ngx_http_responsiveindex_create_loc_conf(ngx_conf_t *cf)
+ngx_http_bootstrapindex_create_loc_conf(ngx_conf_t *cf)
 {
-    ngx_http_responsiveindex_loc_conf_t  *conf;
+    ngx_http_bootstrapindex_loc_conf_t  *conf;
 
-    conf = ngx_palloc(cf->pool, sizeof(ngx_http_responsiveindex_loc_conf_t));
+    conf = ngx_palloc(cf->pool, sizeof(ngx_http_bootstrapindex_loc_conf_t));
     if (conf == NULL) {
         return NULL;
     }
@@ -718,10 +718,10 @@ ngx_http_responsiveindex_create_loc_conf(ngx_conf_t *cf)
 
 
 static char *
-ngx_http_responsiveindex_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+ngx_http_bootstrapindex_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 {
-    ngx_http_responsiveindex_loc_conf_t *prev = parent;
-    ngx_http_responsiveindex_loc_conf_t *conf = child;
+    ngx_http_bootstrapindex_loc_conf_t *prev = parent;
+    ngx_http_bootstrapindex_loc_conf_t *conf = child;
 
     ngx_conf_merge_value(conf->enable, prev->enable, 0);
     ngx_conf_merge_value(conf->localtime, prev->localtime, 0);
@@ -732,7 +732,7 @@ ngx_http_responsiveindex_merge_loc_conf(ngx_conf_t *cf, void *parent, void *chil
 
 
 static ngx_int_t
-ngx_http_responsiveindex_init(ngx_conf_t *cf)
+ngx_http_bootstrapindex_init(ngx_conf_t *cf)
 {
     ngx_http_handler_pt        *h;
     ngx_http_core_main_conf_t  *cmcf;
@@ -744,7 +744,7 @@ ngx_http_responsiveindex_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    *h = ngx_http_responsiveindex_handler;
+    *h = ngx_http_bootstrapindex_handler;
 
     return NGX_OK;
 }

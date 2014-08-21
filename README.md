@@ -1,4 +1,4 @@
-nginx-responsiveindex
+nginx-boostrapindex
 =====================
 
-Responsive indexes module for the Nginx web server
+Responsive boostrap-formatted indexes module for the Nginx web server
