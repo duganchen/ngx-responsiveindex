@@ -22,6 +22,23 @@
 *.x86_64
 *.hex
 
-# ycm_extras and configure nginx source tree
+# ycm_extras and configured nginx source tree
 .ycm_extra_conf.py
 nginx-*
+
+# To get YouCompleteMe to work, have a configured nginx source tree and
+# the following in .ycm_extra_conf.py:
+#
+#     flags = [
+#     '-Wall',
+#     '-pedantic',
+#     '-std=c99',
+#     '-x',
+#     'c',
+#     '-I/path/to/nginx/nginx-1.6.1/src/core',
+#     '-I/path/to/nginx/nginx-1.6.1/src/event',
+#     '-I/path/to/nginx/nginx-1.6.1/src/http',
+#     '-I/path/to/nginx/nginx-1.6.1/src/http/modules',
+#     '-I/path/to/nginx/nginx-1.6.1/src/os/unix',
+#     '-I/path/to/nginx/nginx-1.6.1/objs'
+#     ]
