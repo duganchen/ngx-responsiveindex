@@ -21,3 +21,7 @@
 *.i*86
 *.x86_64
 *.hex
+
+# ycm_extras and configure nginx source tree
+ycm_extras.conf
+nginx-*
