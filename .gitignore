@@ -23,5 +23,5 @@
 *.hex
 
 # ycm_extras and configure nginx source tree
-ycm_extras.conf
+ycm_extra.conf
 nginx-*
