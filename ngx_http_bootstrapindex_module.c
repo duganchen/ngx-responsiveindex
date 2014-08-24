@@ -428,6 +428,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             + 2;
     }
 
+#if 0
 	len += sizeof("<ul class=\"list-group\">" CRLF) - 1;
 	len += sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1;
 
@@ -442,6 +443,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 			+ sizeof("</a><li>") - 1;
 	}
 	len += sizeof("</ul>" CRLF) - 1;
+#endif
 
     b = ngx_create_temp_buf(r->pool, len);
     if (b == NULL) {
