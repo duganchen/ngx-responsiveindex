@@ -1,0 +1,9 @@
+compiler:
+- clang
+
+script:
+- wget http://nginx.org/download/nginx-1.6.1.tar.gz
+- tar xf nginx-1.6.1.tar.gz
+- cd nginx-1.6.1
+- ./configure --add-module=..
+- make

@@ -25,6 +25,7 @@
 # ycm_extras and configured nginx source tree
 .ycm_extra_conf.py
 nginx-*
+*.pyc
 
 # To get YouCompleteMe to work, have a configured nginx source tree and
 # the following in .ycm_extra_conf.py:
