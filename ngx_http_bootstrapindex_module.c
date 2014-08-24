@@ -158,11 +158,13 @@ static u_char table_header[] =
 ;
 
 
+#if 0
 static u_char table_footer[] =
 "</tbody>" CRLF
 "</table>" CRLF
 "</div>" CRLF
 ;
+#endif
 
 
 static ngx_int_t
@@ -400,8 +402,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
           + r->uri.len + escape_html
           + sizeof("</h1>") - 1
           + sizeof(tail) - 1
-		  + sizeof(table_header) - 1
+		  + sizeof(table_header) - 1;
+
+#if 0
 		  + sizeof(table_footer) - 1;
+#endif
 
 
     len += sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1;
@@ -636,7 +641,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
         *b->last++ = LF;
     }
 
+#if 0
     b->last = ngx_cpymem(b->last, table_footer, sizeof(table_footer) - 1);
+#endif
 
 	/* The table is draw. Now draw the list. */
 
