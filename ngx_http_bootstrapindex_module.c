@@ -146,6 +146,7 @@ static u_char tail[] =
 ;
 
 
+/*
 static u_char table_header[] =
 "<div class=\"table-responsive hidden-xs hidden-sm\">" CRLF
 "<table class=\"table table-striped table-condensed\">" CRLF
@@ -158,6 +159,7 @@ static u_char table_header[] =
 "</thead>" CRLF
 "<tbody>" CRLF
 ;
+*/
 
 
 #if 0
@@ -402,8 +404,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
           + sizeof(header) - 1
           + r->uri.len + escape_html
           + sizeof("</h1>") - 1
-          + sizeof(tail) - 1
-		  + sizeof(table_header) - 1;
+          + sizeof(tail) - 1;
 
 
 	/*
@@ -490,7 +491,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
 
+	/*
     b->last = ngx_cpymem(b->last, table_header, sizeof(table_header) - 1);
+	*/
 
     tp = ngx_timeofday();
 
