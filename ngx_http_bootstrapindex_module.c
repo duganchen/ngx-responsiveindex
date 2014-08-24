@@ -438,9 +438,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             + sizeof("28-Sep-1970 12:00") - 1
 			+ sizeof("</td>") - 1
 			+ sizeof("<td>") - 1
-            + 20                                         /* the file size */
+            + 20;                                         /* the file size */
+			/*
 			+ sizeof("</td>") - 1
             + 2;
+			*/
     }
 
 #if 0
@@ -495,7 +497,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     tp = ngx_timeofday();
 
+	/*
 	b->last = ngx_cpymem(b->last, "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF, sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1);
+	*/
 
     for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, "<tr>", sizeof("<tr>") - 1);
@@ -649,11 +653,13 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
         }
 
 
+		/*
 		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
 		b->last = ngx_cpymem(b->last, "</tr>", sizeof("</tr>") - 1);
 
         *b->last++ = CR;
         *b->last++ = LF;
+		*/
     }
 
 #if 0
