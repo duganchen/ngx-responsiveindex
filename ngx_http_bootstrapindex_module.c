@@ -124,7 +124,6 @@ static u_char title[] =
 "</style>" CRLF
 "<title>Index of "
 ;
-#endif
 
 
 static u_char header[] =
@@ -144,6 +143,7 @@ static u_char tail[] =
 "</body>" CRLF
 "</html>" CRLF
 ;
+#endif
 
 
 /*
@@ -401,10 +401,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
     escape_html = ngx_escape_html(NULL, r->uri.data, r->uri.len);
 
     len = r->uri.len + escape_html
-          + sizeof(header) - 1
-          + r->uri.len + escape_html
-          + sizeof("</h1>") - 1
-          + sizeof(tail) - 1;
+          + r->uri.len + escape_html;
 
 
 	/*
@@ -480,18 +477,19 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     if (escape_html) {
         b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
-        b->last = ngx_cpymem(b->last, header, sizeof(header) - 1);
+        /* b->last = ngx_cpymem(b->last, header, sizeof(header) - 1); */
         b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
 
     } else {
         b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
-        b->last = ngx_cpymem(b->last, header, sizeof(header) - 1);
+        /* b->last = ngx_cpymem(b->last, header, sizeof(header) - 1); */
         b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
     }
 
-    b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
 
 	/*
+    b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
+
     b->last = ngx_cpymem(b->last, table_header, sizeof(table_header) - 1);
 	*/
 
@@ -761,7 +759,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     /* TODO: free temporary pool */
 
-    b->last = ngx_cpymem(b->last, tail, sizeof(tail) - 1);
+    /* b->last = ngx_cpymem(b->last, tail, sizeof(tail) - 1); */
 
     if (r == r->main) {
         b->last_buf = 1;
