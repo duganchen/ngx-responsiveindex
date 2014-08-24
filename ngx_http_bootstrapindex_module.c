@@ -10,19 +10,6 @@
 #include <ngx_http.h>
 
 
-#if 0
-
-typedef struct {
-    ngx_buf_t     *buf;
-    size_t         size;
-    ngx_pool_t    *pool;
-    size_t         alloc_size;
-    ngx_chain_t  **last_out;
-} ngx_http_bootstrapindex_ctx_t;
-
-#endif
-
-
 typedef struct {
     ngx_str_t      name;
     size_t         utf_len;
@@ -777,44 +764,6 @@ ngx_http_bootstrapindex_cmp_entries(const void *one, const void *two)
 
     return (int) ngx_strcmp(first->name.data, second->name.data);
 }
-
-
-#if 0
-
-static ngx_buf_t *
-ngx_http_bootstrapindex_alloc(ngx_http_bootstrapindex_ctx_t *ctx, size_t size)
-{
-    ngx_chain_t  *cl;
-
-    if (ctx->buf) {
-
-        if ((size_t) (ctx->buf->end - ctx->buf->last) >= size) {
-            return ctx->buf;
-        }
-
-        ctx->size += ctx->buf->last - ctx->buf->pos;
-    }
-
-    ctx->buf = ngx_create_temp_buf(ctx->pool, ctx->alloc_size);
-    if (ctx->buf == NULL) {
-        return NULL;
-    }
-
-    cl = ngx_alloc_chain_link(ctx->pool);
-    if (cl == NULL) {
-        return NULL;
-    }
-
-    cl->buf = ctx->buf;
-    cl->next = NULL;
-
-    *ctx->last_out = cl;
-    ctx->last_out = &cl->next;
-
-    return ctx->buf;
-}
-
-#endif
 
 
 static ngx_int_t
