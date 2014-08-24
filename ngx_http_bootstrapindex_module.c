@@ -104,6 +104,7 @@ ngx_module_t  ngx_http_bootstrapindex_module = {
 };
 
 
+#if 0
 static u_char title[] =
 "<!DOCTYPE html>" CRLF
 "<html lang=\"en\">" CRLF
@@ -123,6 +124,7 @@ static u_char title[] =
 "</style>" CRLF
 "<title>Index of "
 ;
+#endif
 
 
 static u_char header[] =
@@ -396,6 +398,15 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     escape_html = ngx_escape_html(NULL, r->uri.data, r->uri.len);
 
+    len = r->uri.len + escape_html
+          + sizeof(header) - 1
+          + r->uri.len + escape_html
+          + sizeof("</h1>") - 1
+          + sizeof(tail) - 1
+		  + sizeof(table_header) - 1;
+
+
+	/*
     len = sizeof(title) - 1
           + r->uri.len + escape_html
           + sizeof(header) - 1
@@ -403,6 +414,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
           + sizeof("</h1>") - 1
           + sizeof(tail) - 1
 		  + sizeof(table_header) - 1;
+		  */
 
 #if 0
 		  + sizeof(table_footer) - 1;
@@ -461,7 +473,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                   ngx_http_bootstrapindex_cmp_entries);
     }
 
+	/*
     b->last = ngx_cpymem(b->last, title, sizeof(title) - 1);
+	*/
 
     if (escape_html) {
         b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
