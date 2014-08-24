@@ -637,6 +637,8 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 	/* The table is draw. Now draw the list. */
 
+#if 0
+
 	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs visible-sm\">" CRLF, sizeof("<ul class=\"list-group visible-xs visible-sm\">" CRLF) - 1);
 
 	b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF, sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1);
@@ -727,6 +729,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 	}
 
 	b->last = ngx_cpymem(b->last, "</ul>" CRLF, sizeof("</ul>" CRLF) - 1);
+#endif
 
 
     /* TODO: free temporary pool */
