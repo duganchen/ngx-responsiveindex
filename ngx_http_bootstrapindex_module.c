@@ -423,21 +423,13 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
     entry = entries.elts;
     for (i = 0; i < entries.nelts; i++) {
-        len += sizeof("<tr>") - 1
-			+ sizeof("<td>") - 1
-			+ sizeof("<a href=\"") - 1
-            + entry[i].name.len + entry[i].escape
+        len += entry[i].name.len + entry[i].escape
             + 1                                          /* 1 is for "/" */
             + sizeof("\">") - 1
             + entry[i].name.len - entry[i].utf_len
             + entry[i].escape_html
             + NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
-            + sizeof("</a>") - 1
-			+ sizeof("</td>") - 1
-			+ sizeof("<td>") - 1
             + sizeof("28-Sep-1970 12:00") - 1
-			+ sizeof("</td>") - 1
-			+ sizeof("<td>") - 1
             + 20;                                         /* the file size */
 			/*
 			+ sizeof("</td>") - 1
@@ -502,9 +494,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 	*/
 
     for (i = 0; i < entries.nelts; i++) {
+		/*
 		b->last = ngx_cpymem(b->last, "<tr>", sizeof("<tr>") - 1);
 		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
         b->last = ngx_cpymem(b->last, "<a href=\"", sizeof("<a href=\"") - 1);
+		*/
 
         if (entry[i].escape) {
             ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
@@ -521,8 +515,10 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             *b->last++ = '/';
         }
 
+		/*
         *b->last++ = '"';
         *b->last++ = '>';
+		*/
 
         len = entry[i].utf_len;
 
@@ -574,7 +570,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                 len++;
             }
 
+			/*
             b->last = ngx_cpymem(b->last, "</a>", sizeof("</a>") - 1);
+			*/
 
             if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
                 ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
@@ -582,12 +580,16 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             }
         }
 
+		/*
 		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
+		*/
 
         ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * alcf->localtime, &tm);
 
 
+		/*
 		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
+		*/
 
         b->last = ngx_sprintf(b->last, "%02d-%s-%d %02d:%02d ",
                               tm.ngx_tm_mday,
@@ -596,8 +598,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                               tm.ngx_tm_hour,
                               tm.ngx_tm_min);
 
+
+		/*
 		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
 		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
+		*/
 
         if (alcf->exact_size) {
             if (entry[i].dir) {
