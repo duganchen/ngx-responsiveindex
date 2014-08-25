@@ -138,6 +138,13 @@ TBODY_END CRLF
 TABLE_END CRLF
 DIV_END CRLF
 UL_START CRLF
+LI_START
+A_PRE_HREF
+".."
+TAG_END
+".."
+A_END
+LI_END CRLF
 ;
 
 static u_char to_item_href[] =
