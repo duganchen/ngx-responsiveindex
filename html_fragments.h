@@ -4,7 +4,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-#define DOCTYPE "<DOCTYPE html>"
+#define DOCTYPE "<!DOCTYPE html>"
 #define HTML_PRE_LANG "<html lang=\""
 #define TAG_END "\">"
 #define HTML_POST_LANG TAG_END
@@ -140,7 +140,7 @@ DIV_END CRLF
 UL_START CRLF
 ;
 
-static u_char to_list_href[] =
+static u_char to_item_href[] =
 LI_START
 A_PRE_HREF
 ;
