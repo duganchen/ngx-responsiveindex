@@ -1,5 +1,5 @@
-#ifndef BOOTSTRAPINDEX_HTML_FRAGMENTS_H
-#define BOOTSTRAPINDEX_HTML_FRAGMENTS_H
+#ifndef RESPONSIVEINDEX_HTML_FRAGMENTS_H
+#define RESPONSIVEINDEX_HTML_FRAGMENTS_H
 
 #include <ngx_config.h>
 #include <ngx_core.h>
@@ -20,7 +20,7 @@
 #define HEAD_END "</head>"
 #define BODY_START "<body>"
 #define BODY_END "</body>"
-#define DIV_START "<div class=\""
+#define DIV_START(class) "<div class=\"" class TAG_END
 #define DIV_END "</div>"
 #define CONTAINER "container-fluid"
 #define ROW "row"
@@ -86,15 +86,15 @@ static u_char to_h1[] =
 TITLE_END CRLF
 HEAD_END CRLF
 BODY_START CRLF
-DIV_START CONTAINER TAG_END CRLF
-DIV_START ROW TAG_END CRLF
-DIV_START COL TAG_END CRLF
+DIV_START(CONTAINER) CRLF
+DIV_START(ROW) CRLF
+DIV_START(COL) CRLF
 H1_START
 ;
 
 static u_char to_table_body[] =
 H1_END CRLF
-DIV_START TABLE TAG_END CRLF
+DIV_START(TABLE) CRLF
 TABLE_START CRLF
 THEAD_START CRLF
 TR_START
