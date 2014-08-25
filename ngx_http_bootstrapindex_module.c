@@ -49,6 +49,7 @@ static char *ngx_http_bootstrapindex_merge_loc_conf(ngx_conf_t *cf,
 
 static void ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *, ngx_http_bootstrapindex_entry_t *);
 static void ngx_http_bootstrapindex_cpy_name(ngx_buf_t *, ngx_http_bootstrapindex_entry_t *);
+static void ngx_http_bootstrapindex_cpy_size(ngx_buf_t *, ngx_http_bootstrapindex_entry_t *, ngx_http_bootstrapindex_loc_conf_t  *);
 
 
 static ngx_command_t  ngx_http_bootstrapindex_commands[] = {
@@ -112,13 +113,12 @@ ngx_module_t  ngx_http_bootstrapindex_module = {
 static ngx_int_t
 ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 {
-    u_char                         *last, *filename, scale;
-    off_t                           length;
+    u_char                         *last, *filename;
     size_t                          len, escape_html, allocated, root;
     ngx_tm_t                        tm;
     ngx_err_t                       err;
     ngx_buf_t                      *b;
-    ngx_int_t                       rc, size;
+    ngx_int_t                       rc;
     ngx_str_t                       path;
     ngx_dir_t                       dir;
     ngx_uint_t                      i, level, utf8;
@@ -449,59 +449,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_size, sizeof(to_td_size) - 1);
 
-
-        if (alcf->exact_size) {
-            if (entry[i].dir) {
-                b->last = ngx_cpymem(b->last,  "-",
-                                     sizeof("-") - 1);
-            } else {
-                b->last = ngx_sprintf(b->last, "%19O", entry[i].size);
-            }
-
-        } else {
-            if (entry[i].dir) {
-                b->last = ngx_cpymem(b->last,  "-",
-                                     sizeof("-") - 1);
-
-            } else {
-                length = entry[i].size;
-
-                if (length > 1024 * 1024 * 1024 - 1) {
-                    size = (ngx_int_t) (length / (1024 * 1024 * 1024));
-                    if ((length % (1024 * 1024 * 1024))
-                                                > (1024 * 1024 * 1024 / 2 - 1))
-                    {
-                        size++;
-                    }
-                    scale = 'G';
-
-                } else if (length > 1024 * 1024 - 1) {
-                    size = (ngx_int_t) (length / (1024 * 1024));
-                    if ((length % (1024 * 1024)) > (1024 * 1024 / 2 - 1)) {
-                        size++;
-                    }
-                    scale = 'M';
-
-                } else if (length > 9999) {
-                    size = (ngx_int_t) (length / 1024);
-                    if (length % 1024 > 511) {
-                        size++;
-                    }
-                    scale = 'K';
-
-                } else {
-                    size = (ngx_int_t) length;
-                    scale = '\0';
-                }
-
-                if (scale) {
-                    b->last = ngx_sprintf(b->last, "%6i%c", size, scale);
-
-                } else {
-                    b->last = ngx_sprintf(b->last, "%6i", size);
-                }
-            }
-        }
+		ngx_http_bootstrapindex_cpy_size(b, &entry[i], alcf);
 
 		b->last = ngx_cpymem(b->last, end_row, sizeof(end_row) - 1);
     }
@@ -621,7 +569,8 @@ ngx_http_bootstrapindex_init(ngx_conf_t *cf)
 }
 
 
-static void ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
+static void
+ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
 {
 	if (entry->escape) {
 		ngx_escape_uri(b->last, entry->name.data, entry->name.len, NGX_ESCAPE_URI_COMPONENT);
@@ -636,7 +585,8 @@ static void ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *b, ngx_http_bootstrapinde
 }
 
 
-static void ngx_http_bootstrapindex_cpy_name(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry) {
+static void
+ngx_http_bootstrapindex_cpy_name(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry) {
 
 	size_t char_len;
 	size_t len;
@@ -691,6 +641,54 @@ static void ngx_http_bootstrapindex_cpy_name(ngx_buf_t *b, ngx_http_bootstrapind
 		if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
 			ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
 			b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
+		}
+	}
+}
+
+
+static void ngx_http_bootstrapindex_cpy_size(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry, ngx_http_bootstrapindex_loc_conf_t  *alcf) {
+
+    off_t length;
+	u_char scale;
+	ngx_int_t size;
+
+	if (alcf->exact_size) {
+		if (entry->dir) {
+			b->last = ngx_cpymem(b->last,  "-", sizeof("-") - 1);
+		} else {
+			b->last = ngx_sprintf(b->last, "%19O", entry->size);
+		}
+	} else {
+		if (entry->dir) {
+			b->last = ngx_cpymem(b->last,  "-", sizeof("-") - 1);
+		} else {
+			length = entry->size;
+			if (length > 1024 * 1024 * 1024 - 1) {
+				size = (ngx_int_t) (length / (1024 * 1024 * 1024));
+				if ((length % (1024 * 1024 * 1024)) > (1024 * 1024 * 1024 / 2 - 1)) {
+					size++;
+				}
+				scale = 'G';
+			} else if (length > 1024 * 1024 - 1) {
+				size = (ngx_int_t) (length / (1024 * 1024));
+				if ((length % (1024 * 1024)) > (1024 * 1024 / 2 - 1)) {
+					size++;
+				}
+				scale = 'M';
+			} else if (length > 9999) {
+				size = (ngx_int_t) (length / 1024);
+				if (length % 1024 > 511) {
+					size++;
+				}
+				scale = 'K';
+			} else {
+				size = (ngx_int_t) length;
+				scale = '\0';
+			} if (scale) {
+				b->last = ngx_sprintf(b->last, "%6i%c", size, scale);
+			} else {
+				b->last = ngx_sprintf(b->last, "%6i", size);
+			}
 		}
 	}
 }
