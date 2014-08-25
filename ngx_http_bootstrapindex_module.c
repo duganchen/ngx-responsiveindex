@@ -646,7 +646,8 @@ ngx_http_bootstrapindex_cpy_name(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *
 }
 
 
-static void ngx_http_bootstrapindex_cpy_size(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry, ngx_http_bootstrapindex_loc_conf_t  *alcf) {
+static void
+ngx_http_bootstrapindex_cpy_size(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry, ngx_http_bootstrapindex_loc_conf_t  *alcf) {
 
     off_t length;
 	u_char scale;
