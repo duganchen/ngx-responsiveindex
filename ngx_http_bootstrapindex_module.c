@@ -104,73 +104,6 @@ ngx_module_t  ngx_http_bootstrapindex_module = {
 };
 
 
-#if 0
-static u_char title[] =
-"<!DOCTYPE html>" CRLF
-"<html lang=\"en\">" CRLF
-"<head>" CRLF
-"<meta charset=\"utf-8\">" CRLF
-"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" CRLF
-"<link rel=\"stylesheet\" href=\"//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css\">" CRLF
-"<style>" CRLF
-"body {" CRLF
-"    word-wrap: break-word;" CRLF
-"}" CRLF
-"a {" CRLF
-"    display: block;" CRLF
-"    width: 100%;" CRLF
-"    height: 100%;" CRLF
-"}" CRLF
-"</style>" CRLF
-"<title>Index of "
-;
-
-
-static u_char header[] =
-"</title>" CRLF
-"</head>" CRLF
-"<body>" CRLF
-"<div class=\"container-fluid\">" CRLF
-"<div class=\"row\">" CRLF
-"<div class=\"col-md-12\">" CRLF
-"<h1>Index of "
-;
-
-static u_char tail[] =
-"</div>" CRLF
-"</div>" CRLF
-"</div>" CRLF
-"</body>" CRLF
-"</html>" CRLF
-;
-#endif
-
-
-/*
-static u_char table_header[] =
-"<div class=\"table-responsive hidden-xs hidden-sm\">" CRLF
-"<table class=\"table table-striped table-condensed\">" CRLF
-"<thead>" CRLF
-"<tr>" CRLF
-"<th>File Name</th>" CRLF
-"<th>Date</th>" CRLF
-"<th>File Size</th>" CRLF
-"</tr>" CRLF
-"</thead>" CRLF
-"<tbody>" CRLF
-;
-*/
-
-
-#if 0
-static u_char table_footer[] =
-"</tbody>" CRLF
-"</table>" CRLF
-"</div>" CRLF
-;
-#endif
-
-
 static ngx_int_t
 ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 {
@@ -404,23 +337,6 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
           + r->uri.len + escape_html;
 
 
-	/*
-    len = sizeof(title) - 1
-          + r->uri.len + escape_html
-          + sizeof(header) - 1
-          + r->uri.len + escape_html
-          + sizeof("</h1>") - 1
-          + sizeof(tail) - 1
-		  + sizeof(table_header) - 1;
-		  */
-
-#if 0
-		  + sizeof(table_footer) - 1;
-#endif
-
-
-    len += sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1;
-
     entry = entries.elts;
     for (i = 0; i < entries.nelts; i++) {
         len += entry[i].name.len + entry[i].escape
@@ -431,28 +347,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
             + NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
             + sizeof("28-Sep-1970 12:00") - 1
             + 20;                                         /* the file size */
-			/*
-			+ sizeof("</td>") - 1
-            + 2;
-			*/
-    }
-
-#if 0
-	len += sizeof("<ul class=\"list-group\">" CRLF) - 1;
-	len += sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1;
-
-	for (i = 0; i < entries.nelts; i++) {
-		len += sizeof("<li class=\"list-group-item\"><a href=\"") - 1
-			+ entry[i].name.len + entry[i].escape
-			+ 1                                          /* 1 is for "/" */
-			+ sizeof("\"/>") - 1
-		    + entry[i].name.len - entry[i].utf_len
-            + entry[i].escape_html
-            + NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
-			+ sizeof("</a><li>") - 1;
-	}
-	len += sizeof("</ul>" CRLF) - 1;
-#endif
+	    }
 
     b = ngx_create_temp_buf(r->pool, len);
     if (b == NULL) {
@@ -465,40 +360,18 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                   ngx_http_bootstrapindex_cmp_entries);
     }
 
-	/*
-    b->last = ngx_cpymem(b->last, title, sizeof(title) - 1);
-	*/
-
     if (escape_html) {
         b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
-        /* b->last = ngx_cpymem(b->last, header, sizeof(header) - 1); */
         b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
 
     } else {
         b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
-        /* b->last = ngx_cpymem(b->last, header, sizeof(header) - 1); */
         b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
     }
 
-
-	/*
-    b->last = ngx_cpymem(b->last, "</h1>", sizeof("</h1>") - 1);
-
-    b->last = ngx_cpymem(b->last, table_header, sizeof(table_header) - 1);
-	*/
-
     tp = ngx_timeofday();
 
-	/*
-	b->last = ngx_cpymem(b->last, "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF, sizeof("<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>" CRLF) - 1);
-	*/
-
     for (i = 0; i < entries.nelts; i++) {
-		/*
-		b->last = ngx_cpymem(b->last, "<tr>", sizeof("<tr>") - 1);
-		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
-        b->last = ngx_cpymem(b->last, "<a href=\"", sizeof("<a href=\"") - 1);
-		*/
 
         if (entry[i].escape) {
             ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
@@ -514,11 +387,6 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
         if (entry[i].dir) {
             *b->last++ = '/';
         }
-
-		/*
-        *b->last++ = '"';
-        *b->last++ = '>';
-		*/
 
         len = entry[i].utf_len;
 
@@ -562,7 +430,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
         }
 
         if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-            b->last = ngx_cpymem(last, "..&gt;</a>", sizeof("..&gt;</a>") - 1);
+            b->last = ngx_cpymem(last, "..&gt;", sizeof("..&gt;") - 1);
 
         } else {
             if (entry[i].dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
@@ -570,26 +438,14 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                 len++;
             }
 
-			/*
-            b->last = ngx_cpymem(b->last, "</a>", sizeof("</a>") - 1);
-			*/
-
             if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
                 ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
                 b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
             }
         }
 
-		/*
-		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
-		*/
-
         ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * alcf->localtime, &tm);
 
-
-		/*
-		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
-		*/
 
         b->last = ngx_sprintf(b->last, "%02d-%s-%d %02d:%02d ",
                               tm.ngx_tm_mday,
@@ -597,12 +453,6 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                               tm.ngx_tm_year,
                               tm.ngx_tm_hour,
                               tm.ngx_tm_min);
-
-
-		/*
-		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
-		b->last = ngx_cpymem(b->last, "<td>", sizeof("<td>") - 1);
-		*/
 
         if (alcf->exact_size) {
             if (entry[i].dir) {
@@ -656,121 +506,9 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
                 }
             }
         }
-
-
-		/*
-		b->last = ngx_cpymem(b->last, "</td>", sizeof("</td>") - 1);
-		b->last = ngx_cpymem(b->last, "</tr>", sizeof("</tr>") - 1);
-
-        *b->last++ = CR;
-        *b->last++ = LF;
-		*/
     }
 
-#if 0
-    b->last = ngx_cpymem(b->last, table_footer, sizeof(table_footer) - 1);
-#endif
-
-	/* The table is draw. Now draw the list. */
-
-#if 0
-
-	b->last = ngx_cpymem(b->last, "<ul class=\"list-group visible-xs visible-sm\">" CRLF, sizeof("<ul class=\"list-group visible-xs visible-sm\">" CRLF) - 1);
-
-	b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF, sizeof("<li class=\"list-group-item\"><a href=\"..\">..</a></li>" CRLF) - 1);
-
-	for (i = 0; i < entries.nelts; i++) {
-		b->last = ngx_cpymem(b->last, "<li class=\"list-group-item\"><a href=\"", sizeof("<li class=\"list-group-item\"><a href=\"") - 1);
-
-		/* This copy and paste from the loop above could probably be cleaned up */
-
-        if (entry[i].escape) {
-            ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
-                           NGX_ESCAPE_URI_COMPONENT);
-
-            b->last += entry[i].name.len + entry[i].escape;
-
-        } else {
-            b->last = ngx_cpymem(b->last, entry[i].name.data,
-                                 entry[i].name.len);
-        }
-
-        if (entry[i].dir) {
-            *b->last++ = '/';
-        }
-
-        *b->last++ = '"';
-        *b->last++ = '>';
-
-        len = entry[i].utf_len;
-
-        if (entry[i].name.len != len) {
-            if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
-
-            } else {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
-            }
-
-            last = b->last;
-            b->last = ngx_utf8_cpystrn(b->last, entry[i].name.data,
-                                       char_len, entry[i].name.len + 1);
-
-            if (entry[i].escape_html) {
-                b->last = (u_char *) ngx_escape_html(last, entry[i].name.data,
-                                                     b->last - last);
-            }
-
-            last = b->last;
-
-        } else {
-            if (entry[i].escape_html) {
-                if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                    char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
-
-                } else {
-                    char_len = len;
-                }
-
-                b->last = (u_char *) ngx_escape_html(b->last,
-                                                  entry[i].name.data, char_len);
-                last = b->last;
-
-            } else {
-                b->last = ngx_cpystrn(b->last, entry[i].name.data,
-                                      NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
-                last = b->last - 3;
-            }
-        }
-
-        if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-            b->last = ngx_cpymem(last, "..&gt;</a>", sizeof("..&gt;</a>") - 1);
-
-        } else {
-            if (entry[i].dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                *b->last++ = '/';
-                len++;
-            }
-
-            b->last = ngx_cpymem(b->last, "</a>", sizeof("</a>") - 1);
-
-            if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
-                b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
-            }
-        }
-
-		b->last = ngx_cpymem(b->last, "</li>" CRLF, sizeof("</li>" CRLF) - 1);
-
-	}
-
-	b->last = ngx_cpymem(b->last, "</ul>" CRLF, sizeof("</ul>" CRLF) - 1);
-#endif
-
-
     /* TODO: free temporary pool */
-
-    /* b->last = ngx_cpymem(b->last, tail, sizeof(tail) - 1); */
 
     if (r == r->main) {
         b->last_buf = 1;
