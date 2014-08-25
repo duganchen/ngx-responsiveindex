@@ -47,6 +47,8 @@ static void *ngx_http_bootstrapindex_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_bootstrapindex_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
+static void cpy_uri(ngx_buf_t *,ngx_http_bootstrapindex_entry_t *);
+
 
 static ngx_command_t  ngx_http_bootstrapindex_commands[] = {
 
@@ -426,24 +428,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_href, sizeof(to_td_href) - 1);
 
-		/* Output the URL */
-
-        if (entry[i].escape) {
-            ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
-                           NGX_ESCAPE_URI_COMPONENT);
-
-            b->last += entry[i].name.len + entry[i].escape;
-
-        } else {
-            b->last = ngx_cpymem(b->last, entry[i].name.data,
-                                 entry[i].name.len);
-        }
-
-        if (entry[i].dir) {
-            *b->last++ = '/';
-        }
+		cpy_uri(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
+
+		/* Output the name */
 
         len = entry[i].utf_len;
 
@@ -577,22 +566,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
     for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, to_item_href, sizeof(to_item_href) - 1);
 
-		/* Copy and paste of code (from above) to output the URL */
-
-        if (entry[i].escape) {
-            ngx_escape_uri(b->last, entry[i].name.data, entry[i].name.len,
-                           NGX_ESCAPE_URI_COMPONENT);
-
-            b->last += entry[i].name.len + entry[i].escape;
-
-        } else {
-            b->last = ngx_cpymem(b->last, entry[i].name.data,
-                                 entry[i].name.len);
-        }
-
-        if (entry[i].dir) {
-            *b->last++ = '/';
-        }
+		cpy_uri(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
 
@@ -757,4 +731,20 @@ ngx_http_bootstrapindex_init(ngx_conf_t *cf)
     *h = ngx_http_bootstrapindex_handler;
 
     return NGX_OK;
+}
+
+
+static void cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
+{
+	if (entry->escape) {
+		ngx_escape_uri(b->last, entry->name.data, entry->name.len, NGX_ESCAPE_URI_COMPONENT);
+		b->last += entry->name.len + entry->escape;
+	} else {
+		b->last = ngx_cpymem(b->last, entry->name.data, entry->name.len);
+	}
+
+	if (entry->dir) {
+		*b->last++ = '/';
+	}
+
 }
