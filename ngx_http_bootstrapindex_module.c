@@ -496,8 +496,6 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_size, sizeof(to_td_size) - 1);
 
-		b->last = ngx_cpymem(b->last, end_row, sizeof(end_row) - 1);
-
 
         if (alcf->exact_size) {
             if (entry[i].dir) {
