@@ -1,3 +1,9 @@
+#ifndef BOOTSTRAPINDEX_HTML_FRAGMENTS_H
+#define BOOTSTRAPINDEX_HTML_FRAGMENTS_H
+
+#include <ngx_config.h>
+#include <ngx_core.h>
+
 #define DOCTYPE "<DOCTYPE html>" CRLF
 #define HTML_PRE_LANG "<html lang=\""
 #define TAG_END "\">"
@@ -154,3 +160,5 @@ DIV_END
 BODY_END
 HTML_END
 ;
+
+#endif
