@@ -47,7 +47,8 @@ static void *ngx_http_bootstrapindex_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_bootstrapindex_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
-static void cpy_uri(ngx_buf_t *,ngx_http_bootstrapindex_entry_t *);
+static void ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *, ngx_http_bootstrapindex_entry_t *);
+static void ngx_http_bootstrapindex_cpy_name(ngx_buf_t *, ngx_http_bootstrapindex_entry_t *);
 
 
 static ngx_command_t  ngx_http_bootstrapindex_commands[] = {
@@ -113,7 +114,7 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 {
     u_char                         *last, *filename, scale;
     off_t                           length;
-    size_t                          len, char_len, escape_html, allocated, root;
+    size_t                          len, escape_html, allocated, root;
     ngx_tm_t                        tm;
     ngx_err_t                       err;
     ngx_buf_t                      *b;
@@ -428,67 +429,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_href, sizeof(to_td_href) - 1);
 
-		cpy_uri(b, &entry[i]);
+		ngx_http_bootstrapindex_cpy_uri(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
 
-		/* Output the name */
-
-        len = entry[i].utf_len;
-
-        if (entry[i].name.len != len) {
-            if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
-
-            } else {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
-            }
-
-            last = b->last;
-            b->last = ngx_utf8_cpystrn(b->last, entry[i].name.data,
-                                       char_len, entry[i].name.len + 1);
-
-            if (entry[i].escape_html) {
-                b->last = (u_char *) ngx_escape_html(last, entry[i].name.data,
-                                                     b->last - last);
-            }
-
-            last = b->last;
-
-        } else {
-            if (entry[i].escape_html) {
-                if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                    char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
-
-                } else {
-                    char_len = len;
-                }
-
-                b->last = (u_char *) ngx_escape_html(b->last,
-                                                  entry[i].name.data, char_len);
-                last = b->last;
-
-            } else {
-                b->last = ngx_cpystrn(b->last, entry[i].name.data,
-                                      NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
-                last = b->last - 3;
-            }
-        }
-
-        if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-            b->last = ngx_cpymem(last, "..&gt;", sizeof("..&gt;") - 1);
-
-        } else {
-            if (entry[i].dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                *b->last++ = '/';
-                len++;
-            }
-
-            if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
-                b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
-            }
-        }
+		ngx_http_bootstrapindex_cpy_name(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, to_td_date, sizeof(to_td_date) - 1);
 
@@ -566,69 +511,11 @@ ngx_http_bootstrapindex_handler(ngx_http_request_t *r)
     for (i = 0; i < entries.nelts; i++) {
 		b->last = ngx_cpymem(b->last, to_item_href, sizeof(to_item_href) - 1);
 
-		cpy_uri(b, &entry[i]);
+		ngx_http_bootstrapindex_cpy_uri(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
 
-		/* Copy and paste of code (from above) to output the name */
-
-        len = entry[i].utf_len;
-
-        if (entry[i].name.len != len) {
-            if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
-
-            } else {
-                char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
-            }
-
-            last = b->last;
-            b->last = ngx_utf8_cpystrn(b->last, entry[i].name.data,
-                                       char_len, entry[i].name.len + 1);
-
-            if (entry[i].escape_html) {
-                b->last = (u_char *) ngx_escape_html(last, entry[i].name.data,
-                                                     b->last - last);
-            }
-
-            last = b->last;
-
-        } else {
-            if (entry[i].escape_html) {
-                if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-                    char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
-
-                } else {
-                    char_len = len;
-                }
-
-                b->last = (u_char *) ngx_escape_html(b->last,
-                                                  entry[i].name.data, char_len);
-                last = b->last;
-
-            } else {
-                b->last = ngx_cpystrn(b->last, entry[i].name.data,
-                                      NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
-                last = b->last - 3;
-            }
-        }
-
-        if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-            b->last = ngx_cpymem(last, "..&gt;", sizeof("..&gt;") - 1);
-
-        } else {
-            if (entry[i].dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                *b->last++ = '/';
-                len++;
-            }
-
-            if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-                ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
-                b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
-            }
-        }
-
-
+		ngx_http_bootstrapindex_cpy_name(b, &entry[i]);
 
 		b->last = ngx_cpymem(b->last, to_item_end, sizeof(to_item_end) - 1);
 
@@ -734,7 +621,7 @@ ngx_http_bootstrapindex_init(ngx_conf_t *cf)
 }
 
 
-static void cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
+static void ngx_http_bootstrapindex_cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
 {
 	if (entry->escape) {
 		ngx_escape_uri(b->last, entry->name.data, entry->name.len, NGX_ESCAPE_URI_COMPONENT);
@@ -746,5 +633,64 @@ static void cpy_uri(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry)
 	if (entry->dir) {
 		*b->last++ = '/';
 	}
+}
 
+
+static void ngx_http_bootstrapindex_cpy_name(ngx_buf_t *b, ngx_http_bootstrapindex_entry_t *entry) {
+
+	size_t char_len;
+	size_t len;
+	u_char *last;
+
+	len = entry->utf_len;
+
+	if (entry->name.len != len) {
+
+		if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+			char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
+		} else {
+			char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
+		}
+
+		last = b->last;
+		b->last = ngx_utf8_cpystrn(b->last, entry->name.data, char_len, entry->name.len + 1);
+
+		if (entry->escape_html) {
+			b->last = (u_char *) ngx_escape_html(last, entry->name.data, b->last - last);
+		}
+
+		last = b->last;
+
+	} else {
+
+		if (entry->escape_html) {
+
+			if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+				char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
+			} else {
+				char_len = len;
+			}
+
+			b->last = (u_char *) ngx_escape_html(b->last, entry->name.data, char_len);
+			last = b->last;
+
+		} else {
+			b->last = ngx_cpystrn(b->last, entry->name.data, NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
+			last = b->last - 3;
+		}
+	}
+
+	if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
+		b->last = ngx_cpymem(last, "..&gt;", sizeof("..&gt;") - 1);
+	} else {
+
+		if (entry->dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
+			*b->last++ = '/';
+			len++;
+		}
+		if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
+			ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
+			b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
+		}
+	}
 }
