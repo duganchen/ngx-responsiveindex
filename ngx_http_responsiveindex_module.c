@@ -30,6 +30,13 @@ typedef struct {
 	ngx_flag_t	enable;
 	ngx_flag_t	localtime;
 	ngx_flag_t	exact_size;
+
+	/* URI to load the Twiiter boostrap CSS from. */
+	ngx_str_t	bootstrap_href;
+
+	/* html LANG attribute value. */
+	ngx_str_t	lang;
+
 } ngx_http_responsiveindex_loc_conf_t;
 
 
@@ -81,6 +88,25 @@ static ngx_command_t  ngx_http_responsiveindex_commands[] = {
 		offsetof(ngx_http_responsiveindex_loc_conf_t, exact_size),
 		NULL
 	},
+
+    {
+		ngx_string("responsiveindex_bootstrap_href"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_responsiveindex_loc_conf_t, bootstrap_href),
+		NULL
+	},
+
+    {
+		ngx_string("responsiveindex_lang"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_responsiveindex_loc_conf_t, lang),
+		NULL
+	},
+
 
 	ngx_null_command
 };
@@ -381,14 +407,24 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	len = r->uri.len + escape_html
 		+ r->uri.len + escape_html
 		+ sizeof(to_lang) - 1
-		+ sizeof(EN) - 1
 		+ sizeof(to_stylesheet) - 1
-		+ sizeof(BOOTSTRAPCDN) - 1
 		+ sizeof(to_title) - 1
 		+ sizeof(to_h1) - 1
 		+ sizeof(to_table_body) - 1
 		;
 
+	if (alcf->lang.len) {
+		len += alcf->lang.len;
+	} else {
+		len += sizeof(EN) - 1;
+	}
+
+
+	if (alcf->bootstrap_href.len) {
+		len += alcf->bootstrap_href.len;
+	} else {
+		len += sizeof(BOOTSTRAPCDN) - 1;
+	}
 
 	entry = entries.elts;
 	for (i = 0; i < entries.nelts; i++) {
@@ -450,13 +486,19 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	/*The language attribute. This is eventually intended to be a
 	*set by a directive.
 	*/
-	b->last = ngx_cpymem(b->last, EN, sizeof(EN) - 1);
+	if (alcf->lang.len) {
+		b->last = ngx_cpymem(b->last, alcf->lang.data, alcf->lang.len);
+	} else {
+		b->last = ngx_cpymem(b->last, EN, sizeof(EN) - 1);
+	}
 
 	b->last = ngx_cpymem(b->last, to_stylesheet, sizeof(to_stylesheet) - 1);
 
-	/* The URL to load the stylesheet from. This is also intended to be
-	* a configuration directive. */
-	b->last = ngx_cpymem(b->last, BOOTSTRAPCDN, sizeof(BOOTSTRAPCDN) - 1);
+	if (alcf->bootstrap_href.len) {
+		b->last = ngx_cpymem(b->last, alcf->bootstrap_href.data, alcf->bootstrap_href.len);
+	} else {
+		b->last = ngx_cpymem(b->last, BOOTSTRAPCDN, sizeof(BOOTSTRAPCDN) - 1);
+	}
 
 	b->last = ngx_cpymem(b->last, to_title, sizeof(to_title) - 1);
 
