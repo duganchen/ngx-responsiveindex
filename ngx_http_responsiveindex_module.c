@@ -406,24 +406,24 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 	len = r->uri.len + escape_html
 		+ r->uri.len + escape_html
-		+ sizeof(to_lang) - 1
-		+ sizeof(to_stylesheet) - 1
-		+ sizeof(to_title) - 1
-		+ sizeof(to_h1) - 1
-		+ sizeof(to_table_body) - 1
+		+ to_lang.len
+		+ to_stylesheet.len
+		+ to_title.len
+		+ to_h1.len
+		+ to_table_body.len
 		;
 
 	if (alcf->lang.len) {
 		len += alcf->lang.len;
 	} else {
-		len += sizeof(EN) - 1;
+		len += en.len;
 	}
 
 
 	if (alcf->bootstrap_href.len) {
 		len += alcf->bootstrap_href.len;
 	} else {
-		len += sizeof(BOOTSTRAPCDN) - 1;
+		len += bootstrapcdn.len;
 	}
 
 	entry = entries.elts;
@@ -433,27 +433,27 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			/* 1 is for "/" */
 			+ 1
 
-			+ sizeof(to_td_href) - 1
+			+ to_td_href.len
 			+ sizeof(TAG_END) - 1
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
 			+ NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
-			+ sizeof(to_td_date) - 1
+			+ to_td_date.len
 			+ sizeof("28-Sep-1970 12:00") - 1
-			+ sizeof(to_td_size) - 1
+			+ to_td_size.len
 
 			/* the file size */
 			+ 20
 
-			+ sizeof(end_row) - 1
+			+ end_row.len
 			;
 		}
 
-	len += sizeof(to_list) - 1;
+	len += to_list.len;
 
 	for (i = 0; i < entries.nelts; i++) {
 		len += entry[i].name.len + entry[i].escape
-			+ sizeof(to_item_href) - 1
+			+ to_item_href.len
 			+ sizeof(TAG_END) - 1
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
@@ -463,12 +463,12 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			+ 1
 
 			+ sizeof("\">") - 1
-			+ sizeof(to_item_end) - 1
+			+ to_item_end.len
 			;
 		}
 
 
-	len += sizeof(to_html_end) - 1;
+	len += to_html_end.len;
 
 	b = ngx_create_temp_buf(r->pool, len);
 	if (b == NULL) {
@@ -481,7 +481,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 				  ngx_http_responsiveindex_cmp_entries);
 	}
 
-	b->last = ngx_cpymem(b->last, to_lang, sizeof(to_lang) - 1);
+	b->last = ngx_cpymem(b->last, to_lang.data, to_lang.len);
 
 	/*The language attribute. This is eventually intended to be a
 	*set by a directive.
@@ -489,36 +489,36 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	if (alcf->lang.len) {
 		b->last = ngx_cpymem(b->last, alcf->lang.data, alcf->lang.len);
 	} else {
-		b->last = ngx_cpymem(b->last, EN, sizeof(EN) - 1);
+		b->last = ngx_cpymem(b->last, en.data, en.len);
 	}
 
-	b->last = ngx_cpymem(b->last, to_stylesheet, sizeof(to_stylesheet) - 1);
+	b->last = ngx_cpymem(b->last, to_stylesheet.data, to_stylesheet.len);
 
 	if (alcf->bootstrap_href.len) {
 		b->last = ngx_cpymem(b->last, alcf->bootstrap_href.data, alcf->bootstrap_href.len);
 	} else {
-		b->last = ngx_cpymem(b->last, BOOTSTRAPCDN, sizeof(BOOTSTRAPCDN) - 1);
+		b->last = ngx_cpymem(b->last, bootstrapcdn.data, bootstrapcdn.len);
 	}
 
-	b->last = ngx_cpymem(b->last, to_title, sizeof(to_title) - 1);
+	b->last = ngx_cpymem(b->last, to_title.data, to_title.len);
 
 	if (escape_html) {
 		b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
-		b->last = ngx_cpymem(b->last, to_h1, sizeof(to_h1) - 1);
+		b->last = ngx_cpymem(b->last, to_h1.data, to_h1.len);
 		b->last = (u_char *) ngx_escape_html(b->last, r->uri.data, r->uri.len);
 	} else {
 		b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
-		b->last = ngx_cpymem(b->last, to_h1, sizeof(to_h1) - 1);
+		b->last = ngx_cpymem(b->last, to_h1.data, to_h1.len);
 		b->last = ngx_cpymem(b->last, r->uri.data, r->uri.len);
 	}
 
-	b->last = ngx_cpymem(b->last, to_table_body, sizeof(to_table_body) - 1);
+	b->last = ngx_cpymem(b->last, to_table_body.data, to_table_body.len);
 
 	tp = ngx_timeofday();
 
 	for (i = 0; i < entries.nelts; i++) {
 
-		b->last = ngx_cpymem(b->last, to_td_href, sizeof(to_td_href) - 1);
+		b->last = ngx_cpymem(b->last, to_td_href.data, to_td_href.len);
 
 		ngx_http_responsiveindex_cpy_uri(b, &entry[i]);
 
@@ -526,7 +526,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
 
-		b->last = ngx_cpymem(b->last, to_td_date, sizeof(to_td_date) - 1);
+		b->last = ngx_cpymem(b->last, to_td_date.data, to_td_date.len);
 
 		ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * alcf->localtime, &tm);
 
@@ -538,17 +538,17 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 				tm.ngx_tm_hour,
 				tm.ngx_tm_min);
 
-		b->last = ngx_cpymem(b->last, to_td_size, sizeof(to_td_size) - 1);
+		b->last = ngx_cpymem(b->last, to_td_size.data, to_td_size.len);
 
 		ngx_http_responsiveindex_cpy_size(b, &entry[i], alcf);
 
-		b->last = ngx_cpymem(b->last, end_row, sizeof(end_row) - 1);
+		b->last = ngx_cpymem(b->last, end_row.data, end_row.len);
 	}
 
-	b->last = ngx_cpymem(b->last, to_list, sizeof(to_list) - 1);
+	b->last = ngx_cpymem(b->last, to_list.data, to_list.len);
 
 	for (i = 0; i < entries.nelts; i++) {
-		b->last = ngx_cpymem(b->last, to_item_href, sizeof(to_item_href) - 1);
+		b->last = ngx_cpymem(b->last, to_item_href.data,to_item_href.len);
 
 		ngx_http_responsiveindex_cpy_uri(b, &entry[i]);
 
@@ -556,11 +556,11 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
 
-		b->last = ngx_cpymem(b->last, to_item_end, sizeof(to_item_end) - 1);
+		b->last = ngx_cpymem(b->last, to_item_end.data, to_item_end.len);
 
 	}
 
-	b->last = ngx_cpymem(b->last, to_html_end, sizeof(to_html_end) - 1);
+	b->last = ngx_cpymem(b->last, to_html_end.data, to_html_end.len);
 
 	/* TODO: free temporary pool */
 
