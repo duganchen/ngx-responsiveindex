@@ -1,5 +1,6 @@
 
 /*
+ * Modified from ngx_http_autoindex_module.c
  * Copyright (C) Igor Sysoev
  * Copyright (C) Nginx, Inc.
  */
