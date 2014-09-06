@@ -434,7 +434,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			+ 1
 
 			+ to_td_href.len
-			+ sizeof(TAG_END) - 1
+			+ tag_end.len
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
 			+ NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
@@ -454,7 +454,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	for (i = 0; i < entries.nelts; i++) {
 		len += entry[i].name.len + entry[i].escape
 			+ to_item_href.len
-			+ sizeof(TAG_END) - 1
+			+ tag_end.len
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
 			+ NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
@@ -522,7 +522,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		ngx_http_responsiveindex_cpy_uri(b, &entry[i]);
 
-		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
+		b->last = ngx_cpymem(b->last, tag_end.data, tag_end.len);
 
 		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
 
@@ -552,7 +552,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		ngx_http_responsiveindex_cpy_uri(b, &entry[i]);
 
-		b->last = ngx_cpymem(b->last, TAG_END, sizeof(TAG_END) - 1);
+		b->last = ngx_cpymem(b->last, tag_end.data, tag_end.len);
 
 		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
 

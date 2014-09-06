@@ -55,7 +55,7 @@ static ngx_str_t bootstrapcdn = ngx_string("//maxcdn.bootstrapcdn.com/bootstrap/
 
 /* Blocks of the HTML to be written in order, with runtime data in between. */
 
-static ngx_str_t tag_end = ngx_string(TAG_end);
+static ngx_str_t tag_end = ngx_string(TAG_END);
 
 
 static ngx_str_t to_lang = ngx_string(
