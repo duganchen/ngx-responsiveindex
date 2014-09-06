@@ -55,66 +55,68 @@ static ngx_str_t bootstrapcdn = ngx_string("//maxcdn.bootstrapcdn.com/bootstrap/
 
 /* Blocks of the HTML to be written in order, with runtime data in between. */
 
+static ngx_str_t tag_end = ngx_string(TAG_end);
+
 
 static ngx_str_t to_lang = ngx_string(
-	DOCTYPE CRLF
+	DOCTYPE "\n"
 	HTML_PRE_LANG
 );
 
 
 static ngx_str_t to_stylesheet = ngx_string(
-	HTML_POST_LANG CRLF
-	HEAD_START CRLF
-	CHARSET CRLF
-	VIEWPORT CRLF
+	HTML_POST_LANG "\n"
+	HEAD_START "\n"
+	CHARSET "\n"
+	VIEWPORT "\n"
 	LINK_PRE_HREF
 );
 
 
 static ngx_str_t to_title = ngx_string(
-	TAG_END CRLF
-	STYLE_START CRLF
-	"body {" CRLF
-	"    word-wrap: break-word;" CRLF
-	"}" CRLF
-	"a {" CRLF
-	"    display: block;" CRLF
-	"    width: 100%;" CRLF
-	"    height: 100%;" CRLF
-	"}" CRLF
-	STYLE_END CRLF
+	TAG_END "\n"
+	STYLE_START "\n"
+	"body {" "\n"
+	"    word-wrap: break-word;" "\n"
+	"}" "\n"
+	"a {" "\n"
+	"    display: block;" "\n"
+	"    width: 100%;" "\n"
+	"    height: 100%;" "\n"
+	"}" "\n"
+	STYLE_END "\n"
 	TITLE_START
 );
 
 
 static ngx_str_t to_h1 = ngx_string(
-	TITLE_END CRLF
-	HEAD_END CRLF
-	BODY_START CRLF
-	DIV_START(CONTAINER) CRLF
-	DIV_START(ROW) CRLF
-	DIV_START(COL) CRLF
+	TITLE_END "\n"
+	HEAD_END "\n"
+	BODY_START "\n"
+	DIV_START(CONTAINER) "\n"
+	DIV_START(ROW) "\n"
+	DIV_START(COL) "\n"
 	H1_START
 );
 
 
 static ngx_str_t to_table_body = ngx_string(
-	H1_END CRLF
-	DIV_START(TABLE) CRLF
-	TABLE_START CRLF
-	THEAD_START CRLF
+	H1_END "\n"
+	DIV_START(TABLE) "\n"
+	TABLE_START "\n"
+	THEAD_START "\n"
 	TR_START
 	TH_START "File Name" TH_END
 	TH_START "Date" TH_END
 	TH_START "File Size" TH_END
-	TR_END CRLF
-	THEAD_END CRLF
-	TBODY_START CRLF
+	TR_END "\n"
+	THEAD_END "\n"
+	TBODY_START "\n"
 	TR_START
 	TD_START A_PRE_HREF ".." TAG_END ".." A_END TD_END
 	TD_START TD_END
 	TD_START TD_END
-	TR_END CRLF
+	TR_END "\n"
 );
 
 
@@ -140,21 +142,21 @@ static ngx_str_t to_td_size = ngx_string(
 
 static ngx_str_t end_row = ngx_string(
 	TD_END
-	TR_END CRLF);
+	TR_END "\n");
 
 
 static ngx_str_t to_list = ngx_string(
-	TBODY_END CRLF
-	TABLE_END CRLF
-	DIV_END CRLF
-	UL_START CRLF
+	TBODY_END "\n"
+	TABLE_END "\n"
+	DIV_END "\n"
+	UL_START "\n"
 	LI_START
 	A_PRE_HREF
 	".."
 	TAG_END
 	".."
 	A_END
-	LI_END CRLF
+	LI_END "\n"
 );
 
 
@@ -166,16 +168,16 @@ static ngx_str_t to_item_href = ngx_string(
 
 static ngx_str_t to_item_end = ngx_string(
 	A_END
-	LI_END CRLF);
+	LI_END "\n");
 
 
 static ngx_str_t to_html_end = ngx_string(
-	UL_END CRLF
-	DIV_END CRLF
-	DIV_END CRLF
-	DIV_END CRLF
-	BODY_END CRLF
-	HTML_END CRLF
+	UL_END "\n"
+	DIV_END "\n"
+	DIV_END "\n"
+	DIV_END "\n"
+	BODY_END "\n"
+	HTML_END "\n"
 );
 
 
