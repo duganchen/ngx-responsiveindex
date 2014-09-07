@@ -43,8 +43,6 @@ typedef struct {
 
 #define NGX_HTTP_AUTOINDEX_PREALLOCATE	255
 
-#define NGX_HTTP_AUTOINDEX_NAME_LEN	255
-
 
 static int ngx_libc_cdecl ngx_http_responsiveindex_cmp_entries(const void *one,
 	const void *two);
@@ -56,7 +54,7 @@ static char *ngx_http_responsiveindex_merge_loc_conf(ngx_conf_t *cf,
 	void *parent, void *child);
 
 static void ngx_http_responsiveindex_cpy_uri(ngx_buf_t *, ngx_http_responsiveindex_entry_t *);
-static void ngx_http_responsiveindex_cpy_name(ngx_buf_t *, ngx_http_responsiveindex_entry_t *);
+
 static void ngx_http_responsiveindex_cpy_size(ngx_buf_t *, ngx_http_responsiveindex_entry_t *,
 	ngx_http_responsiveindex_loc_conf_t  *);
 
@@ -438,7 +436,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			+ tag_end.len
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
-			+ NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
+			+ entry[i].name.len
 			+ to_td_date.len
 			+ sizeof("28-Sep-1970 12:00") - 1
 			+ to_td_size.len
@@ -458,7 +456,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			+ tag_end.len
 			+ entry[i].name.len - entry[i].utf_len
 			+ entry[i].escape_html
-			+ NGX_HTTP_AUTOINDEX_NAME_LEN + sizeof("&gt;") - 2
+			+ entry[i].name.len
 
 			/* 1 is for "/" */
 			+ 1
@@ -525,7 +523,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, tag_end.data, tag_end.len);
 
-		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
+		b->last = ngx_cpymem(b->last, entry[i].name.data, entry[i].name.len);
 
 		b->last = ngx_cpymem(b->last, to_td_date.data, to_td_date.len);
 
@@ -555,7 +553,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, tag_end.data, tag_end.len);
 
-		ngx_http_responsiveindex_cpy_name(b, &entry[i]);
+		b->last = ngx_cpymem(b->last, entry[i].name.data, entry[i].name.len);
 
 		b->last = ngx_cpymem(b->last, to_item_end.data, to_item_end.len);
 
@@ -673,67 +671,6 @@ ngx_http_responsiveindex_cpy_uri(ngx_buf_t *b, ngx_http_responsiveindex_entry_t 
 
 	if (entry->dir) {
 		*b->last++ = '/';
-	}
-}
-
-
-static void
-ngx_http_responsiveindex_cpy_name(ngx_buf_t *b, ngx_http_responsiveindex_entry_t *entry) {
-
-	size_t char_len;
-	size_t len;
-	u_char *last;
-
-	len = entry->utf_len;
-
-	if (entry->name.len != len) {
-
-		if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-			char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3 + 1;
-		} else {
-			char_len = NGX_HTTP_AUTOINDEX_NAME_LEN + 1;
-		}
-
-		last = b->last;
-		b->last = ngx_utf8_cpystrn(b->last, entry->name.data, char_len, entry->name.len + 1);
-
-		if (entry->escape_html) {
-			b->last = (u_char *) ngx_escape_html(last, entry->name.data, b->last - last);
-		}
-
-		last = b->last;
-
-	}else {
-
-		if (entry->escape_html) {
-
-			if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-				char_len = NGX_HTTP_AUTOINDEX_NAME_LEN - 3;
-			} else {
-				char_len = len;
-			}
-
-			b->last = (u_char *) ngx_escape_html(b->last, entry->name.data, char_len);
-			last = b->last;
-
-		} else {
-			b->last = ngx_cpystrn(b->last, entry->name.data, NGX_HTTP_AUTOINDEX_NAME_LEN + 1);
-			last = b->last - 3;
-		}
-	}
-
-	if (len > NGX_HTTP_AUTOINDEX_NAME_LEN) {
-		b->last = ngx_cpymem(last, "..&gt;", sizeof("..&gt;") - 1);
-	} else {
-
-		if (entry->dir && NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-			*b->last++ = '/';
-			len++;
-		}
-		if (NGX_HTTP_AUTOINDEX_NAME_LEN - len > 0) {
-			ngx_memset(b->last, ' ', NGX_HTTP_AUTOINDEX_NAME_LEN - len);
-			b->last += NGX_HTTP_AUTOINDEX_NAME_LEN - len;
-		}
 	}
 }
 
