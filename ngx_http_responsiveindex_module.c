@@ -23,7 +23,7 @@ typedef struct {
 	size_t		escape;
 	size_t		escape_html;
 
-	unsigned	dir:1;
+	unsigned	is_dir:1;
 
 	time_t		mtime;
 	off_t		size;
@@ -176,11 +176,11 @@ ngx_module_t ngx_http_responsiveindex_module = {
 };
 
 
-	static ngx_int_t
+static ngx_int_t
 ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 {
 	u_char						*last, *filename;
-	size_t						len, escape_html, allocated, root;
+	size_t						length, escape_html, allocated, root, response_size;
 	ngx_tm_t					tm;
 	ngx_err_t					err;
 	ngx_buf_t					*b;
@@ -198,28 +198,34 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	static char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
+	/* Only handle folders (this will allow files to be served). */
 	if (r->uri.data[r->uri.len - 1] != '/') {
 		return NGX_DECLINED;
 	}
 
+	/* This module ony handles GET and HEAD requests. */
 	if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
 		return NGX_DECLINED;
 	}
 
+	/* First we need to have access to the config. */
 	conf = ngx_http_get_module_loc_conf(r, ngx_http_responsiveindex_module);
 
+	/* Make sure indexing is enabled. */
 	if (!conf->enable) {
 		return NGX_DECLINED;
 	}
 
 	/* NGX_DIR_MASK_LEN is lesser than NGX_HTTP_AUTOINDEX_PREALLOCATE */
 
+	/* Map the URI to a path. */
 	last = ngx_http_map_uri_to_path(r, &path, &root,
 			NGX_HTTP_AUTOINDEX_PREALLOCATE);
 	if (last == NULL) {
 		return NGX_HTTP_INTERNAL_SERVER_ERROR;
 	}
 
+	/* Set the actual path size. */
 	allocated = path.len;
 	path.len = last - path.data;
 	if (path.len > 1) {
@@ -230,6 +236,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
 			"http responsiveindex: \"%s\"", path.data);
 
+	/* Open the path for reading. */
 	if (ngx_open_dir(&path, &dir) == NGX_ERROR) {
 		err = ngx_errno;
 
@@ -271,6 +278,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		return ngx_http_responsiveindex_error(r, &dir, &path);
 	}
 
+	/* Set the headers (the response is HTML). */
 	r->headers_out.status = NGX_HTTP_OK;
 	r->headers_out.content_type_len = sizeof("text/html") - 1;
 	ngx_str_set(&r->headers_out.content_type, "text/html");
@@ -300,9 +308,11 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		utf8 = 0;
 	}
 
+	/* Loop through all files. */
 	for ( ;; ) {
 		ngx_set_errno(0);
 
+		/* Read the directory, break when there are no more files. */
 		if (ngx_read_dir(&dir) == NGX_ERROR) {
 			err = ngx_errno;
 
@@ -318,18 +328,20 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
 				"http responsiveindex file: \"%s\"", ngx_de_name(&dir));
 
-		len = ngx_de_namelen(&dir);
+		length = ngx_de_namelen(&dir);
 
+		/* Skip hidden files and folders. */
 		if (ngx_de_name(&dir)[0] == '.') {
 			continue;
 		}
 
+		/* Get additional file info. */
 		if (!dir.valid_info) {
 
 			/* 1 byte for '/' and 1 byte for terminating '\0' */
 
-			if (path.len + 1 + len + 1 > allocated) {
-				allocated = path.len + 1 + len + 1
+			if (path.len + 1 + length + 1 > allocated) {
+				allocated = path.len + 1 + length + 1
 					+NGX_HTTP_AUTOINDEX_PREALLOCATE;
 
 				filename = ngx_pnalloc(pool, allocated);
@@ -337,12 +349,15 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 					return ngx_http_responsiveindex_error(r, &dir, &path);
 				}
 
+				/* Add the path to the filename and trailing slash. */
 				last = ngx_cpystrn(filename, path.data, path.len + 1);
 				*last++ = '/';
 			}
 
-			ngx_cpystrn(last, ngx_de_name(&dir), len + 1);
+			/* Copy the actual filename into the path. */
+			ngx_cpystrn(last, ngx_de_name(&dir), length + 1);
 
+			/* Get additional information about the file. */
 			if (ngx_de_info(filename, &dir) == NGX_FILE_ERROR) {
 				err = ngx_errno;
 
@@ -366,21 +381,25 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			}
 		}
 
+		/* Push an entry into the array. */
 		entry = ngx_array_push(&entries);
 		if (entry == NULL) {
 			return ngx_http_responsiveindex_error(r, &dir, &path);
 		}
 
-		entry->name.len = len;
+		/* Allocate memory for the file name. */
+		entry->name.len = length;
+		entry->name.data = ngx_pnalloc(pool, length + 1);
 
-		entry->name.data = ngx_pnalloc(pool, len + 1);
+		/* Make sure we have allocated memory. */
 		if (entry->name.data == NULL) {
 			return ngx_http_responsiveindex_error(r, &dir, &path);
 		}
 
-		ngx_cpystrn(entry->name.data, ngx_de_name(&dir), len + 1);
+		/* Assign file name. */
+		ngx_cpystrn(entry->name.data, ngx_de_name(&dir), length + 1);
 
-		entry->escape = 2 * ngx_escape_uri(NULL, ngx_de_name(&dir), len,
+		entry->escape = 2 * ngx_escape_uri(NULL, ngx_de_name(&dir), length,
 				NGX_ESCAPE_URI_COMPONENT);
 
 		entry->escape_html = ngx_escape_html(NULL, entry->name.data,
@@ -389,14 +408,16 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		if (utf8) {
 			entry->utf_len = ngx_utf8_length(entry->name.data, entry->name.len);
 		} else {
-			entry->utf_len = len;
+			entry->utf_len = length;
 		}
 
-		entry->dir = ngx_de_is_dir(&dir);
+		/* Assign file attributes. */
+		entry->is_dir = ngx_de_is_dir(&dir);
 		entry->mtime = ngx_de_mtime(&dir);
 		entry->size = ngx_de_size(&dir);
 	}
 
+	/* Close the directory. */
 	if (ngx_close_dir(&dir) == NGX_ERROR) {
 		ngx_log_error(NGX_LOG_ALERT, r->connection->log, ngx_errno,
 				ngx_close_dir_n " \"%V\" failed", &path);
@@ -404,7 +425,9 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 	escape_html = ngx_escape_html(NULL, r->uri.data, r->uri.len);
 
-	len = r->uri.len + escape_html
+	/* We need to calculate the size of the buffer. */
+
+	response_size = r->uri.len + escape_html
 		+ r->uri.len + escape_html
 		+ to_lang.len
 		+ to_stylesheet.len
@@ -414,21 +437,22 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		;
 
 	if (conf->lang.len) {
-		len += conf->lang.len;
+		response_size += conf->lang.len;
 	} else {
-		len += en.len;
+		response_size += en.len;
 	}
 
 
 	if (conf->bootstrap_href.len) {
-		len += conf->bootstrap_href.len;
+		response_size += conf->bootstrap_href.len;
 	} else {
-		len += bootstrapcdn.len;
+		response_size += bootstrapcdn.len;
 	}
 
+	/* Add a table with each file. */
 	entry = entries.elts;
 	for (i = 0; i < entries.nelts; i++) {
-		len += entry[i].name.len + entry[i].escape
+		response_size += entry[i].name.len + entry[i].escape
 
 			/* 1 is for "/" */
 			+ 1
@@ -449,10 +473,10 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 			;
 	}
 
-	len += to_list.len;
+	response_size += to_list.len;
 
 	for (i = 0; i < entries.nelts; i++) {
-		len += entry[i].name.len + entry[i].escape
+		response_size += entry[i].name.len + entry[i].escape
 			+ to_item_href.len
 			+ tag_end.len
 			+ entry[i].name.len - entry[i].utf_len
@@ -468,18 +492,22 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	}
 
 
-	len += to_html_end.len;
+	response_size += to_html_end.len;
 
-	b = ngx_create_temp_buf(r->pool, len);
+	/* Allocate a buffer for the response body based on the size we calculated. */
+	b = ngx_create_temp_buf(r->pool, response_size);
 	if (b == NULL) {
 		return NGX_ERROR;
 	}
 
+	/* Sort the entries. */
 	if (entries.nelts > 1) {
 		ngx_qsort(entry, (size_t) entries.nelts,
 				sizeof(ngx_http_responsiveindex_entry_t),
 				ngx_http_responsiveindex_cmp_entries);
 	}
+
+	/* Start adding data to the response. */
 
 	b->last = ngx_cpymem(b->last, to_lang.data, to_lang.len);
 
@@ -561,15 +589,18 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 	/* TODO: free temporary pool */
 
+	/* Last buffer in chain. */
 	if (r == r->main) {
 		b->last_buf = 1;
 	}
 
 	b->last_in_chain = 1;
 
+	/* Attach this buffer to the buffer chain. */
 	out.buf = b;
 	out.next = NULL;
 
+	/* Send the buffer chain of the response. */
 	return ngx_http_output_filter(r, &out);
 }
 
@@ -580,12 +611,12 @@ ngx_http_responsiveindex_cmp_entries(const void *one, const void *two)
 	ngx_http_responsiveindex_entry_t *first = (ngx_http_responsiveindex_entry_t *) one;
 	ngx_http_responsiveindex_entry_t *second = (ngx_http_responsiveindex_entry_t *) two;
 
-	if (first->dir && !second->dir) {
+	if (first->is_dir && !second->is_dir) {
 		/* move the directories to the start */
 		return -1;
 	}
 
-	if (!first->dir && second->dir) {
+	if (!first->is_dir && second->is_dir) {
 		/* move the directories to the start */
 		return 1;
 	}
@@ -667,7 +698,7 @@ ngx_http_responsiveindex_cpy_uri(ngx_buf_t *b, ngx_http_responsiveindex_entry_t 
 		b->last = ngx_cpymem(b->last, entry->name.data, entry->name.len);
 	}
 
-	if (entry->dir) {
+	if (entry->is_dir) {
 		*b->last++ = '/';
 	}
 }
@@ -683,7 +714,7 @@ ngx_http_responsiveindex_cpy_size(ngx_buf_t *b, ngx_http_responsiveindex_entry_t
 	size_t size;
 	u_char scale;
 
-	if (entry->dir)
+	if (entry->is_dir)
 		b->last = ngx_cpymem(b->last, "-", sizeof("-") - 1);
 	else
 	{
