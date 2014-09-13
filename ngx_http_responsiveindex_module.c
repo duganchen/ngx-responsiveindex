@@ -193,7 +193,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 	ngx_chain_t					out;
 	ngx_array_t					entries;
 	ngx_http_responsiveindex_entry_t	 *entry;
-	ngx_http_responsiveindex_loc_conf_t *alcf;
+	ngx_http_responsiveindex_loc_conf_t *conf;
 
 	static char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
@@ -206,9 +206,9 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		return NGX_DECLINED;
 	}
 
-	alcf = ngx_http_get_module_loc_conf(r, ngx_http_responsiveindex_module);
+	conf = ngx_http_get_module_loc_conf(r, ngx_http_responsiveindex_module);
 
-	if (!alcf->enable) {
+	if (!conf->enable) {
 		return NGX_DECLINED;
 	}
 
@@ -413,15 +413,15 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 		+ to_table_body.len
 		;
 
-	if (alcf->lang.len) {
-		len += alcf->lang.len;
+	if (conf->lang.len) {
+		len += conf->lang.len;
 	} else {
 		len += en.len;
 	}
 
 
-	if (alcf->bootstrap_href.len) {
-		len += alcf->bootstrap_href.len;
+	if (conf->bootstrap_href.len) {
+		len += conf->bootstrap_href.len;
 	} else {
 		len += bootstrapcdn.len;
 	}
@@ -483,16 +483,16 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 	b->last = ngx_cpymem(b->last, to_lang.data, to_lang.len);
 
-	if (alcf->lang.len) {
-		b->last = ngx_cpymem(b->last, alcf->lang.data, alcf->lang.len);
+	if (conf->lang.len) {
+		b->last = ngx_cpymem(b->last, conf->lang.data, conf->lang.len);
 	} else {
 		b->last = ngx_cpymem(b->last, en.data, en.len);
 	}
 
 	b->last = ngx_cpymem(b->last, to_stylesheet.data, to_stylesheet.len);
 
-	if (alcf->bootstrap_href.len) {
-		b->last = ngx_cpymem(b->last, alcf->bootstrap_href.data, alcf->bootstrap_href.len);
+	if (conf->bootstrap_href.len) {
+		b->last = ngx_cpymem(b->last, conf->bootstrap_href.data, conf->bootstrap_href.len);
 	} else {
 		b->last = ngx_cpymem(b->last, bootstrapcdn.data, bootstrapcdn.len);
 	}
@@ -525,7 +525,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_date.data, to_td_date.len);
 
-		ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * alcf->localtime, &tm);
+		ngx_gmtime(entry[i].mtime + tp->gmtoff * 60 * conf->localtime, &tm);
 
 
 		b->last = ngx_sprintf(b->last, "%02d-%s-%d %02d:%02d ",
@@ -537,7 +537,7 @@ ngx_http_responsiveindex_handler(ngx_http_request_t *r)
 
 		b->last = ngx_cpymem(b->last, to_td_size.data, to_td_size.len);
 
-		ngx_http_responsiveindex_cpy_size(b, &entry[i], alcf);
+		ngx_http_responsiveindex_cpy_size(b, &entry[i], conf);
 
 		b->last = ngx_cpymem(b->last, end_row.data, end_row.len);
 	}
@@ -675,7 +675,7 @@ ngx_http_responsiveindex_cpy_uri(ngx_buf_t *b, ngx_http_responsiveindex_entry_t 
 
 static void
 ngx_http_responsiveindex_cpy_size(ngx_buf_t *b, ngx_http_responsiveindex_entry_t *entry,
-		ngx_http_responsiveindex_loc_conf_t  *alcf) {
+		ngx_http_responsiveindex_loc_conf_t  *conf) {
 
 	/* Implementation taken from ngx-autoindex-ext */
 
@@ -687,7 +687,7 @@ ngx_http_responsiveindex_cpy_size(ngx_buf_t *b, ngx_http_responsiveindex_entry_t
 		b->last = ngx_cpymem(b->last, "-", sizeof("-") - 1);
 	else
 	{
-		if (alcf->exact_size)
+		if (conf->exact_size)
 			b->last = ngx_sprintf(b->last, "%i", entry->size);
 		else
 		{
