@@ -1,5 +1,8 @@
 
 /*
+ * Uses code from ngx_http_autoindex_e_module.c
+ * Written by Casper Jørgensen
+ *
  * Modified from ngx_http_autoindex_module.c
  * Copyright (C) Igor Sysoev
  * Copyright (C) Nginx, Inc.
