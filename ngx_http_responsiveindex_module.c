@@ -35,7 +35,7 @@ typedef struct {
 	ngx_flag_t	localtime;
 	ngx_flag_t	exact_size;
 
-	/* URI to load the Twiiter boostrap CSS from. */
+	/* URI to load the Twitter bootstrap CSS from. */
 	ngx_str_t	bootstrap_href;
 
 	/* html LANG attribute value. */

@@ -50,7 +50,7 @@
 
 
 static ngx_str_t en = ngx_string("en");
-static ngx_str_t bootstrapcdn = ngx_string("//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css");
+static ngx_str_t bootstrapcdn = ngx_string("//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css");
 
 
 /* Blocks of the HTML to be written in order, with runtime data in between. */
