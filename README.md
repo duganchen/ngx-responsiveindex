@@ -7,7 +7,7 @@ Responsive boostrap-formatted indexes module for the Nginx web server.
 
 [sample](http://htmlpreview.github.io/?https://github.com/duganchen/ngx-responsiveindex/blob/master/sample.html)
 
-This is a drop-in replacement for [autoindex](http://nginx.org/en/docs/http/ngx_http_autoindex_module.html).
+This is a drop-in replacement for [autoindex](http://nginx.org/en/docs/http/ngx_http_autoindex_module.html). I've tested it with 1.6 and 1.8, and it should also work for 1.9.
 
 The following options correspond to those for autoindex:
 
